@@ -79,7 +79,7 @@
             animation: pop-green 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
-        /* Floating Animation (z.B. +10s) */
+        /* Floating Animation */
         @keyframes float-up {
             0% { opacity: 1; transform: translateY(0) scale(0.5); }
             50% { opacity: 1; transform: translateY(-30px) scale(1.1); }
@@ -223,7 +223,7 @@
                 time: 60,
                 timerId: null,
                 hearts: 3,
-                expedition: { start: 0, target: 0 },
+                expedition: { start: 0, target: 0, missing: 'val' }, // missing: 'val' or 'op'
                 pyramid: { size: 3, op: '+', base: [], expectedGrid: [], userGrid: [] }
             }
         };
@@ -279,8 +279,8 @@
 
         // --- GAME INSTRUCTIONS DATA ---
         const gameInstructions = {
-            1: { title: "Zeit-Sprint", desc: "Löse so viele Aufgaben wie möglich in 60 Sekunden! Bei jeder richtigen Antwort erhältst du +3 Sekunden, bei einem Fehler verlierst du 5 Sekunden." },
-            2: { title: "Zahlenstrahl-Expedition", desc: "Finde die fehlende Zahl in der Lücke, um deinen Avatar genau zum Schatz zu navigieren. Das Rechenzeichen ist vorgegeben! Du hast insgesamt 3 Leben (❤️)." },
+            1: { title: "Zeit-Sprint", desc: "Löse so viele Aufgaben wie möglich in exakt 60 Sekunden! Sammle Punkte für jede richtige Aufgabe. Es gibt keinen Zeitgewinn und keinen Zeitabzug. Zeig, was du in 60s schaffst!" },
+            2: { title: "Zahlenstrahl-Expedition", desc: "Finde entweder die fehlende Zahl in der Lücke ODER das passende Rechenzeichen (+ / -), um deinen Avatar genau zum Schatz zu navigieren. Du hast insgesamt 3 Leben (❤️)." },
             3: { title: "Pyramiden-Baumeister", desc: "Berechne die Steine der Zahlenmauer von unten nach oben. Achte auf die markierte Regel (Addition oder Subtraktion) an der Spitze! Bei 3 Fehlern stürzt die Pyramide ein." },
             4: { title: "Arcade-Modus", desc: "Überlebe so lange du kannst! Du startest mit 30 Sekunden. Die Zeit läuft gnadenlos ab, aber für jede richtig gelöste Aufgabe erhältst du wertvolle +10 Sekunden zurück!" }
         };
@@ -291,7 +291,28 @@
             let a, b, c, op1, op2, raw, simplified, result, hint;
 
             if (level === 4 && topic !== 5) {
-                return { isOpen: true, target: rnd(-20, 20), raw: `Finde Zahlen!`, hint: "Nutze die Regeln, um auf das Ergebnis zu kommen." };
+                let target = rnd(-20, 20);
+                let locked = {};
+                
+                if (topic === 2) {
+                    locked.op = '+';
+                    if (rnd(1, 2) === 1) locked.val1 = rnd(-20, 20);
+                    else locked.val2 = rnd(1, 20); 
+                } else if (topic === 3) {
+                    locked.op = '-';
+                    if (rnd(1, 2) === 1) locked.val1 = rnd(-20, 20);
+                    else locked.val2 = rnd(-20, -1); 
+                } else {
+                    let r = rnd(1, 3);
+                    if (r === 1) locked.val1 = rnd(-20, 20);
+                    else if (r === 2) locked.val2 = rnd(-20, 20);
+                    else {
+                        locked.val1 = rnd(-20, 20);
+                        locked.op = rndOp();
+                    }
+                }
+                
+                return { isOpen: true, target: target, locked: locked, raw: `Finde Zahlen!`, hint: "Nutze die Regeln, um auf das Ergebnis zu kommen." };
             }
 
             const fmt = (n) => n.toString().replace('.', ',');
@@ -374,8 +395,19 @@
             while(start === target) target = rnd(-15, 15);
             state.game.expedition.start = start;
             state.game.expedition.target = target;
-            state.ansRes = '';
-            state.openOp = rndOp(); // Zufälliges, aber festes Rechenzeichen vorgeben
+            
+            // Randomly decide what is missing
+            state.game.expedition.missing = Math.random() > 0.5 ? 'val' : 'op';
+            let op = rndOp();
+            let val = op === '+' ? target - start : start - target;
+            
+            if (state.game.expedition.missing === 'val') {
+                state.openOp = op;
+                state.ansRes = '';
+            } else {
+                state.openOp = '?';
+                state.ansRes = val.toString().replace('.', ',');
+            }
         };
 
         const generateGame3Level = () => {
@@ -408,7 +440,6 @@
         // --- UPDATE UI LOGIC ---
         function updateTabs() {
             const container = document.getElementById('tabs-container');
-            // Optimierte Tabs für Handys: Umbrechen statt scrollen
             container.className = 'flex flex-wrap gap-1 md:gap-2 justify-center';
             const labels = ["1. Schreibweise", "2. Addition", "3. Subtraktion", "4. Gemischt", "🎮 Spiele"];
             let html = '';
@@ -530,7 +561,7 @@
                 if (state.game.activeMode === 1 || state.game.activeMode === 4) { // Sprint & Arcade
                     
                     let timeClass = '';
-                    if (state.resStatus === 'correct') timeClass = 'text-green-500 animate-pop-green inline-block';
+                    if (state.resStatus === 'correct' && state.game.activeMode === 4) timeClass = 'text-green-500 animate-pop-green inline-block';
                     else if (state.game.time <= 10) timeClass = 'text-red-600 animate-danger-tick inline-block';
                     else timeClass = 'text-purple-600 animate-normal-tick inline-block';
 
@@ -587,7 +618,7 @@
         function showFloatingText(text, colorClass) {
             const workspace = document.getElementById('workspace-container');
             const floater = document.createElement('div');
-            floater.className = `absolute top-[10%] font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50 ${colorClass}`;
+            floater.className = `absolute top-0 md:-top-10 font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50 ${colorClass}`;
             floater.innerText = text;
             workspace.appendChild(floater);
             setTimeout(() => floater.remove(), 1000);
@@ -616,7 +647,7 @@
             resEl.className = resClass;
 
             let bigTimeClass = 'text-purple-600 animate-normal-tick';
-            if (state.resStatus === 'correct') bigTimeClass = 'text-green-500 animate-pop-green';
+            if (state.resStatus === 'correct' && state.game.activeMode === 4) bigTimeClass = 'text-green-500 animate-pop-green';
             else if (state.game.time <= 10) bigTimeClass = 'text-red-600 animate-danger-tick';
 
             if (bigTimeCont) {
@@ -673,18 +704,30 @@
                 const inpW = state.isMobile ? 'w-14 text-sm p-1.5' : 'w-20 text-xl p-2';
                 const brS = state.isMobile ? 'text-base' : 'text-xl';
                 const selP = state.isMobile ? 'p-1 text-sm' : 'p-2 text-xl';
+                
+                const lVal1 = t.locked?.val1 !== undefined;
+                const lVal2 = t.locked?.val2 !== undefined;
+                const lOp = t.locked?.op !== undefined;
+
+                const val1Class = lVal1 ? `${inpW} text-center border-2 border-gray-200 bg-gray-100 rounded text-gray-500 cursor-not-allowed font-bold` : `${inpW} text-center border-2 border-gray-300 rounded focus:border-indigo-500 focus:outline-none`;
+                const val2Class = lVal2 ? `${inpW} text-center border-2 border-gray-200 bg-gray-100 rounded text-gray-500 cursor-not-allowed font-bold` : `${inpW} text-center border-2 border-gray-300 rounded focus:border-indigo-500 focus:outline-none`;
+                const opClass = lOp ? `${selP} font-bold border-2 border-gray-200 bg-gray-100 rounded text-gray-500 cursor-not-allowed appearance-none` : `${selP} font-bold border-2 border-gray-300 rounded bg-white focus:outline-none`;
+
+                const opDisabled = lOp ? 'disabled' : '';
+                const val1Disabled = lVal1 ? 'readonly' : '';
+                const val2Disabled = lVal2 ? 'readonly' : '';
 
                 html += `
                 <div class="flex items-center justify-center gap-1 md:gap-2">
                     <span class="${brS} font-bold">(</span>
-                    <input id="in-open1" type="text" inputmode="decimal" class="${inpW} text-center border-2 border-gray-300 rounded focus:border-indigo-500 focus:outline-none" placeholder="Zahl" value="${state.openVal1}">
+                    <input id="in-open1" type="text" inputmode="decimal" class="${val1Class}" placeholder="Zahl" value="${state.openVal1}" ${val1Disabled}>
                     <span class="${brS} font-bold">)</span>
-                    <select id="in-openOp" class="${selP} font-bold border-2 border-gray-300 rounded bg-white focus:outline-none">
+                    <select id="in-openOp" class="${opClass}" ${opDisabled}>
                         <option value="+" ${state.openOp === '+' ? 'selected' : ''}>+</option>
                         <option value="-" ${state.openOp === '-' ? 'selected' : ''}>-</option>
                     </select>
                     <span class="${brS} font-bold">(</span>
-                    <input id="in-open2" type="text" inputmode="decimal" class="${inpW} text-center border-2 border-gray-300 rounded focus:border-indigo-500 focus:outline-none" placeholder="Zahl" value="${state.openVal2}">
+                    <input id="in-open2" type="text" inputmode="decimal" class="${val2Class}" placeholder="Zahl" value="${state.openVal2}" ${val2Disabled}>
                     <span class="${brS} font-bold">)</span>
                 </div>`;
             } else {
@@ -811,7 +854,15 @@
 
             if (state.status === 'idle' && !state.isMobile) {
                 setTimeout(() => {
-                    let elToFocus = document.getElementById('in-open1') || document.getElementById('in-simp') || document.getElementById('in-res');
+                    let elToFocus;
+                    if (state.level === 4) {
+                        if (document.getElementById('in-open1') && !document.getElementById('in-open1').readOnly) elToFocus = document.getElementById('in-open1');
+                        else if (document.getElementById('in-open2') && !document.getElementById('in-open2').readOnly) elToFocus = document.getElementById('in-open2');
+                    } else if (state.topic === 1 || (state.requireSimp && !(state.topic === 4 && state.level === 3))) {
+                        elToFocus = document.getElementById('in-simp');
+                    } else {
+                        elToFocus = document.getElementById('in-res');
+                    }
                     if (elToFocus) elToFocus.focus();
                 }, 50);
             }
@@ -867,7 +918,7 @@
                 else resClass += "border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-100";
                 
                 let bigTimeClass = 'text-purple-600 animate-normal-tick';
-                if (state.resStatus === 'correct') bigTimeClass = 'text-green-500 animate-pop-green';
+                if (state.resStatus === 'correct' && state.game.activeMode === 4) bigTimeClass = 'text-green-500 animate-pop-green';
                 else if (state.game.time <= 10) bigTimeClass = 'text-red-600 animate-danger-tick';
 
                 html += `
@@ -876,6 +927,10 @@
                     <div id="big-time-container" class="inline-block text-6xl md:text-8xl font-black mb-6 md:mb-10 transition-colors ${bigTimeClass}">
                         <span id="big-time">${state.game.time}</span><span class="text-3xl md:text-5xl text-gray-300">s</span>
                     </div>
+
+                    ${(m === 4 && state.resStatus === 'correct') ? '<div class="absolute top-0 md:-top-10 text-green-500 font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50">+10s</div>' : ''}
+                    ${(m === 1 && state.resStatus === 'correct') ? '<div class="absolute top-0 md:-top-10 text-green-500 font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50">+3s</div>' : ''}
+                    ${(m === 1 && state.resStatus === 'error') ? '<div class="absolute top-0 md:-top-10 text-red-500 font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50">-5s</div>' : ''}
                     
                     <div id="game-task-raw" class="${rawSize} font-black text-slate-800 font-mono tracking-tight mb-8">${state.task.raw}</div>
                     
@@ -897,6 +952,25 @@
                 if (state.resStatus === 'error') expBoxClass += "border-red-400 bg-red-50 animate-shake";
                 else if (state.resStatus === 'correct') expBoxClass += "border-green-400 bg-green-50 animate-pulse-fast";
                 else expBoxClass += "bg-purple-50 border-purple-200";
+
+                let opHtml = '';
+                if (state.game.expedition.missing === 'val') {
+                    opHtml = `<div class="text-xl md:text-2xl font-black text-purple-600 mx-1 md:mx-2">${state.openOp}</div>`;
+                } else {
+                    opHtml = `
+                    <select id="game-in-op" class="p-1 md:p-2 text-lg md:text-xl font-bold border-2 border-purple-300 rounded-lg bg-white focus:outline-none mx-1" ${state.resStatus==='correct'?'disabled':''}>
+                        <option value="?" ${state.openOp === '?' ? 'selected' : ''} disabled>?</option>
+                        <option value="+" ${state.openOp === '+' ? 'selected' : ''}>+</option>
+                        <option value="-" ${state.openOp === '-' ? 'selected' : ''}>-</option>
+                    </select>`;
+                }
+                
+                let valHtml = '';
+                if (state.game.expedition.missing === 'op') {
+                    valHtml = `<div class="w-16 md:w-20 text-center text-lg md:text-xl p-2 md:p-3 font-bold text-slate-800">${state.ansRes}</div>`;
+                } else {
+                    valHtml = `<input id="game-in-val" type="text" inputmode="decimal" class="w-16 md:w-20 text-center text-lg md:text-xl p-2 md:p-3 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="?" value="${state.ansRes}" ${state.resStatus==='correct'?'disabled':''}>`;
+                }
 
                 html += `
                 <div class="w-full flex-1 flex flex-col items-center justify-center max-w-lg mx-auto relative">
@@ -925,9 +999,9 @@
                     
                     <div class="${expBoxClass}">
                         <div class="text-xl md:text-2xl font-black text-slate-800">${s < 0 ? `(${s})` : s}</div>
-                        <div class="text-xl md:text-2xl font-black text-purple-600 mx-1 md:mx-2">${state.openOp}</div>
+                        ${opHtml}
                         <span class="text-lg md:text-xl font-bold">(</span>
-                        <input id="game-in-val" type="text" inputmode="decimal" class="w-16 md:w-20 text-center text-lg md:text-xl p-2 md:p-3 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="?" value="${state.ansRes}" ${state.resStatus==='correct'?'disabled':''}>
+                        ${valHtml}
                         <span class="text-lg md:text-xl font-bold">)</span>
                         <span class="text-xl md:text-2xl font-bold text-gray-400 ml-1">= ${t < 0 ? `(${t})` : t}</span>
                     </div>`;
@@ -935,7 +1009,7 @@
                     if (state.resStatus === 'correct') {
                         html += `<div class="mt-8 flex flex-col items-center animate-zoom-in w-full"><div class="bg-green-100 text-green-700 px-4 md:px-6 py-2 md:py-3 rounded-full font-bold flex items-center gap-2 border border-green-300 text-sm md:text-base">${icons.checkLg} Richtig gelöst!</div></div>`;
                     } else if (state.resStatus === 'error') {
-                        html += `<div class="mt-8 flex flex-col items-center animate-shake w-full"><div class="bg-red-100 text-red-700 px-4 md:px-6 py-2 md:py-3 rounded-full font-bold flex items-center gap-2 border border-red-300 text-sm md:text-base text-center">${icons.xLg} Falsch! ${isNaN(parseFloat(state.ansRes.replace(',', '.'))) ? 'Zahl eintragen.' : '-1 ❤️'}</div></div>`;
+                        html += `<div class="mt-8 flex flex-col items-center animate-shake w-full"><div class="bg-red-100 text-red-700 px-4 md:px-6 py-2 md:py-3 rounded-full font-bold flex items-center gap-2 border border-red-300 text-sm md:text-base text-center">${icons.xLg} Falsch! -1 ❤️</div></div>`;
                     } else {
                         html += `<button onclick="checkGame2()" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-12 rounded-xl shadow-lg transition-all text-sm md:text-base">Los! ${state.isMobile ? '' : '(Enter)'}</button>`;
                     }
@@ -996,10 +1070,15 @@
                 if(!state.isMobile || state.status === 'playing') setTimeout(() => {if(document.activeElement !== el) el.focus()}, 10);
             }
             if (m === 2) {
-                if (document.getElementById('game-in-val')) {
+                if (document.getElementById('game-in-val') && !document.getElementById('game-in-val').disabled) {
                     let el = document.getElementById('game-in-val');
                     el.addEventListener('input', e => state.ansRes = e.target.value);
                     if(!state.isMobile && state.resStatus !== 'correct') setTimeout(() => el.focus(), 50);
+                }
+                if (document.getElementById('game-in-op') && !document.getElementById('game-in-op').disabled) {
+                    let el = document.getElementById('game-in-op');
+                    el.addEventListener('change', e => { state.openOp = e.target.value; if(!state.isMobile) el.blur(); });
+                    if(!state.isMobile && state.resStatus !== 'correct' && state.openOp === '?') setTimeout(() => el.focus(), 50);
                 }
             }
             if (m === 3 && !state.isMobile) {
@@ -1027,8 +1106,11 @@
             } else {
                 state.level = 1;
                 state.status = 'idle';
+                
+                // Set initial time for display based on current active Mode
                 if (state.game.activeMode === 1) state.game.time = 60;
                 else if (state.game.activeMode === 4) state.game.time = 30;
+
                 renderAll();
             }
         }
@@ -1046,6 +1128,7 @@
             state.status = 'idle';
             state.level = 1;
             
+            // Fix Initial Time for the Start Screen Display
             if (id === 1) state.game.time = 60;
             if (id === 4) state.game.time = 30;
 
@@ -1067,10 +1150,18 @@
         // --- TRAINING LOGIC ---
         function initTask() {
             state.task = generateTask(state.topic, state.level);
-            state.ansSimp = ''; state.ansRes = ''; state.openVal1 = ''; state.openVal2 = '';
-            if (state.topic === 2) state.openOp = '+';
-            else if (state.topic === 3) state.openOp = '-';
-            else state.openOp = '+';
+            state.ansSimp = ''; state.ansRes = ''; 
+            
+            if (state.task.isOpen) {
+                state.openVal1 = state.task.locked?.val1 !== undefined ? String(state.task.locked.val1).replace('.', ',') : '';
+                state.openVal2 = state.task.locked?.val2 !== undefined ? String(state.task.locked.val2).replace('.', ',') : '';
+                state.openOp = state.task.locked?.op !== undefined ? state.task.locked.op : '+';
+            } else {
+                state.openVal1 = ''; state.openVal2 = '';
+                if (state.topic === 2) state.openOp = '+';
+                else if (state.topic === 3) state.openOp = '-';
+                else state.openOp = '+';
+            }
             
             state.status = 'idle'; state.failCount = 0; state.showSolution = false;
             state.simpStatus = ''; state.resStatus = ''; state.showHint = false;
@@ -1079,7 +1170,7 @@
 
         function handleFail() {
             state.failCount += 1;
-            if (state.failCount >= 3) state.showSolution = true;
+            if (state.failCount > 3) state.showSolution = true;
         }
 
         function checkAnswer() {
@@ -1222,13 +1313,15 @@
             resEl.className = resClass;
 
             let bigTimeClass = 'text-purple-600 animate-normal-tick';
-            if (state.resStatus === 'correct') bigTimeClass = 'text-green-500 animate-pop-green';
+            if (state.resStatus === 'correct' && state.game.activeMode === 4) bigTimeClass = 'text-green-500 animate-pop-green';
             else if (state.game.time <= 10) bigTimeClass = 'text-red-600 animate-danger-tick';
 
-            if (bigTimeCont) bigTimeCont.className = "inline-block text-6xl md:text-8xl font-black mb-6 md:mb-10 transition-colors " + bigTimeClass;
+            if (bigTimeCont) {
+                bigTimeCont.className = "inline-block text-6xl md:text-8xl font-black mb-6 md:mb-10 transition-colors " + bigTimeClass;
+            }
             if (bigTime) bigTime.innerText = state.game.time;
             
-            // Critical focus retention for Mobile browsers!
+            // Critical focus retention for Mobile browsers
             if(document.activeElement !== resEl) {
                 resEl.focus();
             }
@@ -1239,11 +1332,11 @@
             if (!isNaN(parsedRes) && Math.abs(parsedRes - state.task.result) < 0.01) {
                 // Correct
                 state.resStatus = 'correct';
-                state.game.score += 10 * state.level;
-                state.game.time += 3;
+                const pts = 10 * state.level;
+                state.game.score += pts;
                 
                 updateFastGameUI();
-                showFloatingText('+3s', 'text-green-500');
+                showFloatingText('+' + pts, 'text-green-500');
                 
                 setTimeout(() => {
                     if(state.status !== 'playing') return;
@@ -1256,12 +1349,9 @@
             } else {
                 // Wrong
                 state.resStatus = 'error';
-                state.game.time = Math.max(0, state.game.time - 5);
                 updateFastGameUI();
-                showFloatingText('-5s', 'text-red-500');
                 
-                if (state.game.time === 0) gameOver();
-                else setTimeout(() => { 
+                setTimeout(() => { 
                     if(state.status !== 'playing') return;
                     state.resStatus = ''; 
                     updateFastGameUI(); 
@@ -1301,17 +1391,24 @@
         }
 
         function checkGame2() {
-            const v = parseFloat(state.ansRes.replace(',', '.'));
-            if (isNaN(v)) { 
-                state.resStatus = 'error'; 
-                renderAll(); 
-                setTimeout(()=> { state.resStatus=''; renderAll(); }, 1000); 
-                return; 
+            let v, op;
+            if (state.game.expedition.missing === 'val') {
+                v = parseFloat(state.ansRes.replace(',', '.'));
+                op = state.openOp;
+                if (isNaN(v)) { 
+                    state.resStatus = 'error'; renderAll(); setTimeout(()=> { state.resStatus=''; renderAll(); }, 1000); return; 
+                }
+            } else {
+                v = parseFloat(state.ansRes.replace(',', '.'));
+                op = state.openOp;
+                if (op === '?') { 
+                    state.resStatus = 'error'; renderAll(); setTimeout(()=> { state.resStatus=''; renderAll(); }, 1000); return; 
+                }
             }
             
             const s = state.game.expedition.start;
             const t = state.game.expedition.target;
-            const res = state.openOp === '+' ? s + v : s - v;
+            const res = op === '+' ? s + v : s - v;
 
             if (Math.abs(res - t) < 0.01) {
                 state.resStatus = 'correct';
