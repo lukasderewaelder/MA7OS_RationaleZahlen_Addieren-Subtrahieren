@@ -42,13 +42,51 @@
             display: none;
         }
 
-        /* Scrollbars verstecken, aber Scrollen erlauben falls wirklich nötig */
+        /* Scrollbars verstecken */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
         .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Game Animations */
+        @keyframes danger-tick {
+            0% { transform: scale(1); color: #dc2626; } 
+            50% { transform: scale(1.15); color: #ef4444; } 
+            100% { transform: scale(1); color: #dc2626; }
+        }
+        .animate-danger-tick {
+            animation: danger-tick 1s ease-in-out infinite;
+        }
+
+        @keyframes normal-tick {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-normal-tick {
+            animation: normal-tick 1s ease-in-out infinite;
+        }
+
+        @keyframes pop-green {
+            0% { transform: scale(1); color: #9333ea; }
+            50% { transform: scale(1.4); color: #22c55e; }
+            100% { transform: scale(1); color: #22c55e; }
+        }
+        .animate-pop-green {
+            animation: pop-green 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* Floating Animation (z.B. +10s) */
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0) scale(0.5); }
+            50% { opacity: 1; transform: translateY(-30px) scale(1.1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1); }
+        }
+        .animate-float-up {
+            animation: float-up 0.8s ease-out forwards;
         }
     </style>
 </head>
@@ -68,13 +106,13 @@
         <div class="flex flex-col md:flex-row flex-1 p-2 md:p-4 gap-2 md:gap-4 overflow-hidden">
             
             <!-- LEFT COLUMN: Controls & Info -->
-            <div class="flex flex-col gap-2 md:gap-4 w-full md:w-1/3 shrink-0 overflow-y-auto no-scrollbar">
+            <div id="left-sidebar" class="flex flex-col gap-2 md:gap-4 w-full md:w-1/3 shrink-0 overflow-y-auto no-scrollbar transition-all">
                 
                 <!-- CONTROLS -->
                 <div class="flex flex-col bg-gray-50 p-2 md:p-3 rounded-xl border border-gray-200 gap-2 shrink-0">
                     <div>
-                        <label class="text-xs md:text-sm font-semibold text-gray-500 block mb-1 text-center md:text-left">Schwierigkeitsgrad:</label>
-                        <div id="levels-container" class="flex gap-2 justify-center md:justify-start">
+                        <label id="level-label" class="text-xs md:text-sm font-semibold text-gray-500 block mb-1 text-center md:text-left">Schwierigkeitsgrad:</label>
+                        <div id="levels-container" class="flex gap-2 justify-center md:justify-start flex-wrap">
                             <!-- Levels rendered by JS -->
                         </div>
                     </div>
@@ -90,11 +128,14 @@
                     </div>
                 </div>
 
-                <!-- INFO BOX -->
+                <!-- INFO BOX (Hidden in Game Mode) -->
                 <div id="info-box-container" class="shrink-0"></div>
 
+                <!-- GAME STATS BOX (Hidden in Training Mode) -->
+                <div id="game-stats-container" class="hidden shrink-0"></div>
+
                 <!-- KEYBOARD HINT (PC/Tablet only) -->
-                <div class="hidden md:flex flex-col items-center justify-center shrink-0 mt-auto pt-4 pb-2 text-xs text-gray-400">
+                <div id="keyboard-hint" class="hidden md:flex flex-col items-center justify-center shrink-0 mt-auto pt-4 pb-2 text-xs text-gray-400">
                     <div class="flex items-center gap-1.5 mb-2 font-semibold text-gray-500">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" ry="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/></svg>
                         Tastatur-Steuerung
@@ -149,14 +190,17 @@
             xLg: `<svg class="w-5 h-5 md:w-6 md:h-6 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
             refresh: `<svg class="w-4 h-4 md:w-5 md:h-5 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
             help: `<svg class="w-3 h-3 md:w-4 md:h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
-            alert: `<svg class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`
+            alert: `<svg class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`,
+            gamepad: `<svg class="w-4 h-4 md:w-5 md:h-5 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="2"/></svg>`,
+            flagPlus: `<svg class="w-6 h-6 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/><line x1="10" x2="14" y1="9" y2="9"/><line x1="12" x2="12" y1="7" y2="11"/></svg>`,
+            flagMinus: `<svg class="w-6 h-6 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/><line x1="10" x2="14" y1="9" y2="9"/></svg>`
         };
 
         // --- STATE ---
         let state = {
             isMobile: window.innerWidth < 768,
-            topic: 1,
-            level: 1,
+            topic: 1, // 1-4 Training, 5 Games
+            level: 1, // 1-4 for Training, 1-3 for Games
             requireSimp: false,
             task: null,
             ansSimp: '',
@@ -164,20 +208,31 @@
             openVal1: '',
             openVal2: '',
             openOp: '+',
-            status: 'idle', // 'idle', 'success', 'error'
+            status: 'idle', // 'idle', 'success', 'error', 'gameover', 'playing'
             failCount: 0,
             showSolution: false,
-            simpStatus: '', // '', 'correct', 'error'
-            resStatus: '', // '', 'correct', 'error', 'folgefehler'
-            showHint: false
+            simpStatus: '', 
+            resStatus: '', 
+            showHint: false,
+            
+            // GAME STATE
+            game: {
+                activeMode: 1, // 1: Sprint, 2: Expedition, 3: Pyramide, 4: Arcade
+                score: 0,
+                highscores: { 1: 0, 2: 0, 3: 0, 4: 0 },
+                time: 60,
+                timerId: null,
+                hearts: 3,
+                expedition: { start: 0, target: 0 },
+                pyramid: { size: 3, op: '+', base: [], expectedGrid: [], userGrid: [] }
+            }
         };
 
-        // Fenstergröße überwachen
         window.addEventListener('resize', () => {
             const wasMobile = state.isMobile;
             state.isMobile = window.innerWidth < 768;
             if (wasMobile !== state.isMobile) {
-                renderAll(); // Oberfläche neu berechnen, wenn sich der Gerätetyp ändert
+                renderAll();
             }
         });
 
@@ -198,19 +253,19 @@
                     </ul>`
             },
             2: {
-                title: "Mit positiven Zahlen rechnen",
+                title: "Addition",
                 content: `
                     <ul class="list-disc pl-4 md:pl-5 space-y-1 md:space-y-2 text-xs md:text-sm text-gray-700">
-                    <li><b>Addieren (+):</b> Auf der Zahlengeraden nach <b>rechts</b>. <br/>Beispiel: -4 + 3 ➔ -1</li>
-                    <li><b>Subtrahieren (-):</b> Auf der Zahlengeraden nach <b>links</b>.<br/>Beispiel: 2 - 5 ➔ -3</li>
+                    <li><b>Addieren einer positiven Zahl +(+):</b> Auf der Zahlengeraden nach <b>rechts</b>. <br/>Beispiel: -4 + (+3) = -4 + 3 ➔ -1</li>
+                    <li><b>Addieren einer negativen Zahl +(−):</b> Gleiches wie Subtrahieren. Gehe nach <b>links</b>.<br/>Beispiel: 2 + (-5) = 2 - 5 ➔ -3</li>
                     </ul>`
             },
             3: {
-                title: "Mit negativen Zahlen rechnen",
+                title: "Subtraktion",
                 content: `
                     <ul class="list-disc pl-4 md:pl-5 space-y-1 md:space-y-2 text-xs md:text-sm text-gray-700">
-                    <li><b>Addieren einer negativen Zahl +(−):</b><br/>Gleiches wie Subtrahieren. Gehe nach <b>links</b>.<br/><i>(+2) + (-5) = 2 - 5 = -3</i></li>
-                    <li><b>Subtrahieren einer negativen Zahl −(−):</b><br/>Gleiches wie Addieren. Gehe nach <b>rechts</b>.<br/><i>(-4) - (-7) = -4 + 7 = 3</i></li>
+                    <li><b>Subtrahieren einer positiven Zahl -(+):</b> Auf der Zahlengeraden nach <b>links</b>. <br/>Beispiel: -2 - (+3) = -2 - 3 ➔ -5</li>
+                    <li><b>Subtrahieren einer negativen Zahl −(−):</b> Gleiches wie Addieren. Gehe nach <b>rechts</b>.<br/>Beispiel: -4 - (-7) = -4 + 7 ➔ 3</li>
                     </ul>`
             },
             4: {
@@ -222,17 +277,21 @@
             }
         };
 
-        // --- AUFGABEN GENERATOR ---
+        // --- GAME INSTRUCTIONS DATA ---
+        const gameInstructions = {
+            1: { title: "Zeit-Sprint", desc: "Löse so viele Aufgaben wie möglich in 60 Sekunden! Bei jeder richtigen Antwort erhältst du +3 Sekunden, bei einem Fehler verlierst du 5 Sekunden." },
+            2: { title: "Zahlenstrahl-Expedition", desc: "Finde die fehlende Zahl in der Lücke, um deinen Avatar genau zum Schatz zu navigieren. Das Rechenzeichen ist vorgegeben! Du hast insgesamt 3 Leben (❤️)." },
+            3: { title: "Pyramiden-Baumeister", desc: "Berechne die Steine der Zahlenmauer von unten nach oben. Achte auf die markierte Regel (Addition oder Subtraktion) an der Spitze! Bei 3 Fehlern stürzt die Pyramide ein." },
+            4: { title: "Arcade-Modus", desc: "Überlebe so lange du kannst! Du startest mit 30 Sekunden. Die Zeit läuft gnadenlos ab, aber für jede richtig gelöste Aufgabe erhältst du wertvolle +10 Sekunden zurück!" }
+        };
+        const gameIcons = {1: '⏱️', 2: '🗺️', 3: '🔺', 4: '🕹️'};
+
+        // --- TASK & GAME GENERATORS ---
         const generateTask = (topic, level) => {
             let a, b, c, op1, op2, raw, simplified, result, hint;
 
-            if (level === 4) {
-                let target = rnd(-20, 20);
-                return {
-                    isOpen: true, target: target,
-                    raw: `Finde Zahlen!`,
-                    hint: "Nutze die Regeln, um auf das Ergebnis zu kommen."
-                };
+            if (level === 4 && topic !== 5) {
+                return { isOpen: true, target: rnd(-20, 20), raw: `Finde Zahlen!`, hint: "Nutze die Regeln, um auf das Ergebnis zu kommen." };
             }
 
             const fmt = (n) => n.toString().replace('.', ',');
@@ -263,33 +322,32 @@
                     break;
                 case 2:
                     a = rnd(1, level === 1 ? 10 : 30) * (level === 2 ? rndSign() : 1);
-                    b = rnd(1, level === 1 ? 10 : 30);
-                    op1 = rndOp();
+                    b = rnd(1, level === 1 ? 10 : 30) * (level === 1 ? 1 : rndSign());
+                    op1 = '+'; 
                     if (level === 3) {
                         a = parseFloat((rnd(-50, 50) / 10).toFixed(1));
-                        b = parseFloat((rnd(1, 50) / 10).toFixed(1));
+                        b = parseFloat((rnd(-50, 50) / 10).toFixed(1));
                     }
                     raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
-                    simplified = `${fmt(a)} ${op1 === '+' ? '+' : '-'} ${fmt(b)}`;
-                    result = Math.round((a + (op1 === '+' ? b : -b)) * 10) / 10;
-                    hint = op1 === '+' ? `Starte bei ${fmt(a)} und gehe ${fmt(b)} nach rechts.` : `Starte bei ${fmt(a)} und gehe ${fmt(b)} nach links.`;
+                    simplified = `${fmt(a)} ${b < 0 ? '-' : '+'} ${fmt(Math.abs(b))}`;
+                    result = Math.round((a + b) * 10) / 10;
+                    hint = b >= 0 ? `Starte bei ${fmt(a)} und gehe ${fmt(Math.abs(b))} nach rechts.` : `+(−) wird Minus! Gehe ${fmt(Math.abs(b))} nach links.`;
                     break;
                 case 3:
                     a = rnd(1, level === 1 ? 10 : 30) * (level === 1 ? 1 : rndSign());
-                    b = rnd(-30, -1);
-                    if (level === 1) b = rnd(-10, -1);
-                    op1 = rndOp();
+                    b = rnd(1, level === 1 ? 10 : 30) * (level === 1 ? 1 : rndSign());
+                    op1 = '-'; 
                     if (level === 3) {
                         a = parseFloat((rnd(-50, 50) / 10).toFixed(1));
-                        b = parseFloat((rnd(-50, -1) / 10).toFixed(1));
+                        b = parseFloat((rnd(-50, 50) / 10).toFixed(1));
                     }
                     raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
-                    let effOp = op1 === '+' ? '-' : '+';
-                    simplified = `${fmt(a)} ${effOp} ${fmt(Math.abs(b))}`;
-                    result = Math.round((a + (op1 === '+' ? b : -b)) * 10) / 10;
-                    hint = op1 === '+' ? `+(-) wird Minus! Subtrahiere ${fmt(Math.abs(b))}, nach links.` : `-(-) wird Plus! Addiere ${fmt(Math.abs(b))}, nach rechts.`;
+                    simplified = `${fmt(a)} ${b < 0 ? '+' : '-'} ${fmt(Math.abs(b))}`;
+                    result = Math.round((a - b) * 10) / 10;
+                    hint = b >= 0 ? `Starte bei ${fmt(a)} und gehe ${fmt(Math.abs(b))} nach links.` : `−(−) wird Plus! Gehe ${fmt(Math.abs(b))} nach rechts.`;
                     break;
                 case 4:
+                case 5: // Used for Sprint & Arcade Mode
                     if (level === 3) {
                         a = rnd(1, 15) * rndSign(); b = rnd(1, 15); c = rnd(1, 15);
                         op1 = rndOp(); op2 = rndOp();
@@ -301,8 +359,7 @@
                         a = rnd(1, 25) * rndSign(); b = rnd(1, 25) * rndSign();
                         op1 = rndOp();
                         raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
-                        let o1 = (op1 === '+' && b > 0) || (op1 === '-' && b < 0) ? '+' : '-';
-                        simplified = `${fmt(a)} ${o1} ${fmt(Math.abs(b))}`;
+                        simplified = `${fmt(a)} ${(op1 === '+' && b > 0) || (op1 === '-' && b < 0) ? '+' : '-'} ${fmt(Math.abs(b))}`;
                         result = Math.round((a + (op1 === '+' ? b : -b)) * 10) / 10;
                         hint = "Gleiche Zeichen = Plus, Verschiedene Zeichen = Minus.";
                     }
@@ -311,16 +368,56 @@
             return { raw, simplified, result, hint, isOpen: false };
         };
 
+        const generateGame2Level = () => {
+            let start = rnd(-15, 15);
+            let target = rnd(-15, 15);
+            while(start === target) target = rnd(-15, 15);
+            state.game.expedition.start = start;
+            state.game.expedition.target = target;
+            state.ansRes = '';
+            state.openOp = rndOp(); // Zufälliges, aber festes Rechenzeichen vorgeben
+        };
+
+        const generateGame3Level = () => {
+            let size = state.level === 1 ? 3 : (state.level === 2 ? 4 : rnd(3, 4));
+            let op = rndOp(); 
+            
+            let base = [];
+            let maxVal = state.level === 1 ? 10 : 20;
+            for(let i=0; i<size; i++) base.push(rnd(-maxVal, maxVal));
+            
+            let expectedGrid = [];
+            let userGrid = [];
+            expectedGrid[size-1] = [...base];
+            userGrid[size-1] = base.map(v => ({val: v, status: 'locked'}));
+
+            for(let r = size-2; r >= 0; r--) {
+                expectedGrid[r] = [];
+                userGrid[r] = [];
+                for(let c = 0; c <= r; c++) {
+                    let left = expectedGrid[r+1][c];
+                    let right = expectedGrid[r+1][c+1];
+                    expectedGrid[r][c] = op === '+' ? left + right : left - right;
+                    userGrid[r][c] = {val: '', status: ''};
+                }
+            }
+
+            state.game.pyramid = { size, op, base, expectedGrid, userGrid };
+        };
+
         // --- UPDATE UI LOGIC ---
-        
         function updateTabs() {
             const container = document.getElementById('tabs-container');
-            container.className = state.isMobile ? 'grid grid-cols-2 gap-1' : 'flex flex-wrap gap-2 justify-center';
-            const labels = ["1. Schreibweise", "2. Positive Zahlen", "3. Negative Zahlen", "4. Gemischt"];
+            container.className = state.isMobile ? 'flex overflow-x-auto no-scrollbar gap-1 snap-x' : 'flex flex-wrap gap-2 justify-center';
+            const labels = ["1. Schreibweise", "2. Addition", "3. Subtraktion", "4. Gemischt", "🎮 Spiele"];
             let html = '';
-            for (let t = 1; t <= 4; t++) {
-                const activeClasses = state.topic === t ? 'bg-blue-500 text-white shadow-md' : 'bg-slate-700 hover:bg-slate-600 text-white';
-                const sizeClasses = state.isMobile ? 'px-1 py-1.5 text-[11px] leading-tight' : 'px-4 py-2 text-sm md:text-base';
+            for (let t = 1; t <= 5; t++) {
+                const isActive = state.topic === t;
+                let activeClasses = isActive ? 'bg-blue-500 text-white shadow-md' : 'bg-slate-700 hover:bg-slate-600 text-white';
+                if(t === 5 && isActive) activeClasses = 'bg-purple-600 text-white shadow-md ring-2 ring-purple-300';
+                else if(t === 5) activeClasses = 'bg-purple-800 hover:bg-purple-700 text-white shadow-md border border-purple-500';
+                
+                const sizeClasses = state.isMobile ? 'px-2 py-1.5 text-xs whitespace-nowrap snap-start shrink-0' : 'px-4 py-2 text-sm md:text-base';
                 html += `<button onclick="setTopic(${t})" class="${sizeClasses} rounded font-medium transition-colors ${activeClasses}">${labels[t-1]}</button>`;
             }
             container.innerHTML = html;
@@ -328,74 +425,174 @@
 
         function updateLevelsAndToggle() {
             const container = document.getElementById('levels-container');
-            let html = '';
-            for (let l = 1; l <= 4; l++) {
-                if (state.topic === 1 && l === 4) continue;
-                const activeClasses = state.level === l ? 'bg-indigo-600 text-white ring-2 ring-indigo-200' : 'bg-white border border-gray-300 text-gray-500 hover:border-indigo-400 hover:text-indigo-600';
-                const sizeClasses = state.isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-base';
-                html += `<button onclick="setLevel(${l})" class="${sizeClasses} rounded-full flex items-center justify-center font-bold transition-all ${activeClasses}" title="${l===4 ? 'Offene Aufgaben' : 'Level '+l}">${l === 4 ? '∞' : l}</button>`;
-            }
-            container.innerHTML = html;
-
+            const label = document.getElementById('level-label');
             const toggleContainer = document.getElementById('toggle-container');
-            const isAlreadySimplified = state.topic === 4 && state.level === 3;
-            if (state.topic > 1 && state.level < 4 && !isAlreadySimplified) {
-                toggleContainer.classList.remove('hidden');
-                toggleContainer.classList.add('flex');
-                
-                const btn = document.getElementById('require-simp-btn');
-                const knob = document.getElementById('require-simp-knob');
-                
-                document.getElementById('toggle-label-text').innerText = state.isMobile ? "Zwischenschritt" : "Zwischenschritt erzwingen";
+            
+            let html = '';
 
-                if (state.requireSimp) {
-                    btn.classList.replace('bg-gray-300', 'bg-green-500');
-                    if(state.isMobile) knob.classList.replace('translate-x-1', 'translate-x-5');
-                    else knob.classList.replace('translate-x-1', 'translate-x-7');
-                } else {
-                    btn.classList.replace('bg-green-500', 'bg-gray-300');
-                    if(state.isMobile) knob.classList.replace('translate-x-5', 'translate-x-1');
-                    else knob.classList.replace('translate-x-7', 'translate-x-1');
+            if (state.topic < 5) {
+                // TRAINING MODE LEVELS
+                label.innerText = "Schwierigkeitsgrad:";
+                for (let l = 1; l <= 4; l++) {
+                    if (state.topic === 1 && l === 4) continue;
+                    const activeClasses = state.level === l ? 'bg-indigo-600 text-white ring-2 ring-indigo-200' : 'bg-white border border-gray-300 text-gray-500 hover:border-indigo-400 hover:text-indigo-600';
+                    const sizeClasses = state.isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-base';
+                    html += `<button onclick="setLevel(${l})" class="${sizeClasses} rounded-full flex items-center justify-center font-bold transition-all ${activeClasses}" title="${l===4 ? 'Offene Aufgaben' : 'Level '+l}">${l === 4 ? '∞' : l}</button>`;
                 }
+                
+                const isAlreadySimplified = state.topic === 4 && state.level === 3;
+                if (state.topic > 1 && state.level < 4 && !isAlreadySimplified) {
+                    toggleContainer.classList.remove('hidden');
+                    toggleContainer.classList.add('flex');
+                    const btn = document.getElementById('require-simp-btn');
+                    const knob = document.getElementById('require-simp-knob');
+                    document.getElementById('toggle-label-text').innerText = state.isMobile ? "Zwischenschritt" : "Zwischenschritt erzwingen";
+
+                    if (state.requireSimp) {
+                        btn.classList.replace('bg-gray-300', 'bg-green-500');
+                        knob.classList.replace('translate-x-1', state.isMobile ? 'translate-x-5' : 'translate-x-7');
+                    } else {
+                        btn.classList.replace('bg-green-500', 'bg-gray-300');
+                        knob.classList.replace('translate-x-5', 'translate-x-1');
+                        knob.classList.replace('translate-x-7', 'translate-x-1');
+                    }
+                } else {
+                    toggleContainer.classList.add('hidden');
+                    toggleContainer.classList.remove('flex');
+                }
+
             } else {
+                // GAMES MODE MENU
+                label.innerText = "Spielauswahl:";
                 toggleContainer.classList.add('hidden');
                 toggleContainer.classList.remove('flex');
+                
+                const games = [
+                    { id: 1, icon: '⏱️', name: 'Sprint' },
+                    { id: 4, icon: '🕹️', name: 'Arcade' },
+                    { id: 2, icon: '🗺️', name: 'Expedition' },
+                    { id: 3, icon: '🔺', name: 'Pyramide' }
+                ];
+
+                container.classList.remove('justify-center', 'md:justify-start');
+                container.classList.add('grid', 'grid-cols-2', 'md:grid-cols-1', 'gap-2', 'w-full');
+                
+                games.forEach(g => {
+                    const activeClasses = state.game.activeMode === g.id ? 'bg-purple-600 text-white shadow-md ring-2 ring-purple-200' : 'bg-white border border-gray-300 text-gray-700 hover:border-purple-400';
+                    html += `<button onclick="setGameMode(${g.id})" class="w-full flex items-center justify-center md:justify-start gap-2 p-2 rounded-lg font-bold transition-all text-xs md:text-base ${activeClasses}">
+                                <span class="text-lg md:text-xl">${g.icon}</span> ${g.name}
+                             </button>`;
+                });
             }
+            container.innerHTML = html;
         }
 
-        function updateInfoBox() {
-            const container = document.getElementById('info-box-container');
-            const info = infos[state.topic];
-            
-            // Auf Smartphones standardmäßig eingeklappt
-            if (state.isMobile) {
-                container.innerHTML = `
-                    <details class="bg-blue-50 border-l-4 border-blue-500 p-2 rounded-r-lg shadow-sm">
-                        <summary class="font-bold text-blue-800 cursor-pointer flex items-center gap-2 text-xs">
-                            ${icons.bookOpen} ${info.title} <span class="text-[10px] text-blue-500 font-normal ml-auto border border-blue-200 px-1 rounded bg-white">Info</span>
-                        </summary>
-                        <div class="mt-2 text-xs border-t border-blue-100 pt-2">
+        function updateSideBoxes() {
+            const infoContainer = document.getElementById('info-box-container');
+            const statsContainer = document.getElementById('game-stats-container');
+            const hintBox = document.getElementById('keyboard-hint');
+
+            if (state.topic < 5) {
+                // Show Info, hide Stats
+                infoContainer.classList.remove('hidden');
+                statsContainer.classList.add('hidden');
+                hintBox.classList.remove('hidden', 'md:flex');
+                hintBox.classList.add('hidden', 'md:flex');
+
+                const info = infos[state.topic];
+                if (state.isMobile) {
+                    infoContainer.innerHTML = `
+                        <details class="bg-blue-50 border-l-4 border-blue-500 p-2 rounded-r-lg shadow-sm">
+                            <summary class="font-bold text-blue-800 cursor-pointer flex items-center gap-2 text-xs">
+                                ${icons.bookOpen} ${info.title} <span class="text-[10px] text-blue-500 font-normal ml-auto border border-blue-200 px-1 rounded bg-white">Info</span>
+                            </summary>
+                            <div class="mt-2 text-xs border-t border-blue-100 pt-2">${info.content}</div>
+                        </details>`;
+                } else {
+                    infoContainer.innerHTML = `
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 md:p-4 rounded-r-lg shadow-sm">
+                            <div class="flex items-center gap-2 mb-1 md:mb-2">
+                                ${icons.bookOpen} <h3 class="font-bold text-blue-800 text-sm md:text-base">${info.title}</h3>
+                            </div>
                             ${info.content}
-                        </div>
-                    </details>
-                `;
+                        </div>`;
+                }
             } else {
-                container.innerHTML = `
-                    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 md:p-4 rounded-r-lg shadow-sm">
-                        <div class="flex items-center gap-2 mb-1 md:mb-2">
-                            ${icons.bookOpen}
-                            <h3 class="font-bold text-blue-800 text-sm md:text-base">${info.title}</h3>
+                // Show Stats, hide Info and Keyboard Hint
+                infoContainer.classList.add('hidden');
+                statsContainer.classList.remove('hidden');
+                hintBox.classList.add('hidden');
+                hintBox.classList.remove('md:flex');
+
+                let statsHtml = `<div class="bg-purple-50 border border-purple-200 p-3 rounded-xl shadow-sm w-full">`;
+                
+                if (state.game.activeMode === 1 || state.game.activeMode === 4) { // Sprint & Arcade
+                    
+                    let timeClass = '';
+                    if (state.resStatus === 'correct') timeClass = 'text-green-500 animate-pop-green inline-block';
+                    else if (state.game.time <= 10) timeClass = 'text-red-600 animate-danger-tick inline-block';
+                    else timeClass = 'text-purple-600 animate-normal-tick inline-block';
+
+                    statsHtml += `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-purple-800">⏱️ Zeit:</span>
+                            <span id="sidebar-time" class="text-lg font-black ${timeClass}">${state.game.time}s</span>
                         </div>
-                        ${info.content}
-                    </div>
-                `;
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-purple-800">⭐ Punkte:</span>
+                            <span class="text-lg font-black text-purple-600">${state.game.score}</span>
+                        </div>
+                        <div class="mt-3 text-[10px] md:text-xs text-purple-500 text-center border-t border-purple-200 pt-2">
+                            Highscore: <b>${state.game.highscores[state.game.activeMode]}</b>
+                        </div>`;
+                } else if (state.game.activeMode === 2) { // Expedition
+                    statsHtml += `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-purple-800">❤️ Leben:</span>
+                            <span class="text-base">
+                                ${'❤️'.repeat(state.game.hearts)}${'🖤'.repeat(3 - state.game.hearts)}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-purple-800">🏆 Level:</span>
+                            <span class="text-lg font-black text-purple-600">${state.level}</span>
+                        </div>
+                        <div class="mt-3 text-[10px] md:text-xs text-purple-500 text-center border-t border-purple-200 pt-2">
+                            Highscore: <b>Lvl ${state.game.highscores[2]}</b>
+                        </div>`;
+                } else if (state.game.activeMode === 3) { // Pyramide
+                    statsHtml += `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-purple-800">❤️ Bau-Versuche:</span>
+                            <span class="text-base">
+                                ${'🧱'.repeat(state.game.hearts)}${'❌'.repeat(3 - state.game.hearts)}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-purple-800">🏆 Stufe:</span>
+                            <span class="text-lg font-black text-purple-600">${state.level}</span>
+                        </div>
+                        <div class="mt-3 text-[10px] md:text-xs text-purple-500 text-center border-t border-purple-200 pt-2">
+                            Highscore: <b>Stufe ${state.game.highscores[3]}</b>
+                        </div>`;
+                }
+                
+                statsHtml += `</div>`;
+                statsContainer.innerHTML = statsHtml;
             }
         }
 
+        // --- MAIN WORKSPACE RENDERER ---
         function updateWorkspace() {
-            if (!state.task) return;
+            if (state.topic < 5) renderTrainingWorkspace();
+            else renderGameWorkspace();
+        }
+
+        // --- TRAINING WORKSPACE ---
+        function renderTrainingWorkspace() {
             const container = document.getElementById('workspace-container');
             const t = state.task;
+            if(!t) return;
             
             let html = `<div class="flex flex-col items-center justify-center w-full h-full">`;
             
@@ -408,8 +605,8 @@
                     <div class="${targetSize} font-black text-indigo-600 mb-2 bg-indigo-50 inline-block rounded-lg md:rounded-xl border border-indigo-100">
                         Ziel: ${t.target ? t.target.toString().replace('.', ',') : ''}
                     </div>
-                    ${state.topic === 2 ? `<p class="text-[10px] md:text-sm text-gray-500">Regel: 2. Zahl muss positiv sein!</p>` : ''}
-                    ${state.topic === 3 ? `<p class="text-[10px] md:text-sm text-gray-500">Regel: 2. Zahl muss negativ sein!</p>` : ''}
+                    ${state.topic === 2 ? `<p class="text-[10px] md:text-sm text-gray-500">Regel: Es muss eine Addition (+) sein!</p>` : ''}
+                    ${state.topic === 3 ? `<p class="text-[10px] md:text-sm text-gray-500">Regel: Es muss eine Subtraktion (-) sein!</p>` : ''}
                 </div>`;
             } else {
                 const rawSize = state.isMobile ? (t.raw.length > 15 ? 'text-xl' : 'text-3xl') : 'text-4xl lg:text-5xl';
@@ -427,7 +624,6 @@
             const actualRequireSimp = state.requireSimp && !isAlreadySimplified;
 
             if (state.level === 4) {
-                // Dynamische Input-Größen
                 const inpW = state.isMobile ? 'w-14 text-sm p-1.5' : 'w-20 text-xl p-2';
                 const brS = state.isMobile ? 'text-base' : 'text-xl';
                 const selP = state.isMobile ? 'p-1 text-sm' : 'p-2 text-xl';
@@ -488,7 +684,6 @@
 
             // Action Buttons & Feedback
             html += `<div class="mt-4 md:mt-6 flex flex-col items-center gap-2 md:gap-3 w-full">`;
-
             const btnS = state.isMobile ? 'py-1.5 px-4 text-xs w-[140px]' : 'py-2 px-8 text-base';
 
             if (state.status === 'idle' && !state.showSolution) {
@@ -496,9 +691,7 @@
                 <button onclick="checkAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold ${btnS} rounded-lg shadow-md transition-all flex justify-center items-center gap-1">
                     ${icons.check} Prüfen
                 </button>`;
-            }
-
-            if (state.status === 'success') {
+            } else if (state.status === 'success') {
                 html += `
                 <div class="flex flex-col items-center animate-zoom-in w-full">
                     <div class="bg-green-100 text-green-700 px-3 py-1.5 md:px-6 md:py-2 rounded-full font-bold flex items-center gap-1 md:gap-2 mb-2 border border-green-300 text-xs md:text-base">
@@ -508,9 +701,7 @@
                         ${icons.refresh} Weiter
                     </button>
                 </div>`;
-            }
-
-            if (state.status === 'error' && !state.showSolution) {
+            } else if (state.status === 'error' && !state.showSolution) {
                 html += `
                 <div class="flex flex-col items-center animate-shake w-full">
                     <div class="bg-red-100 text-red-700 px-3 py-1.5 md:px-6 md:py-2 rounded-full font-bold flex items-center gap-1 md:gap-2 mb-2 border border-red-300 text-xs md:text-base text-center">
@@ -520,9 +711,7 @@
                         Nochmal
                     </button>
                 </div>`;
-            }
-
-            if (state.showSolution) {
+            } else if (state.showSolution) {
                 html += `
                 <div class="flex flex-col items-center animate-zoom-in w-full max-w-xs md:max-w-md">
                     <div class="bg-orange-100 text-orange-800 p-2 md:p-4 rounded-lg border border-orange-300 w-full text-left text-[11px] md:text-sm">
@@ -556,77 +745,269 @@
                 }
                 html += `</div>`;
             }
-
             if (state.level === 4 && !state.showHint && state.status !== 'success' && !state.showSolution) {
-                html += `
-                <button onclick="setShowHint(true)" class="mt-2 md:mt-4 text-gray-500 hover:text-gray-600 flex items-center justify-center gap-1 mx-auto text-[10px] md:text-sm font-bold bg-gray-100 px-3 py-1 md:px-4 md:py-2 rounded-full">
-                    ${icons.help} Regel
-                </button>`;
+                html += `<button onclick="setShowHint(true)" class="mt-2 md:mt-4 text-gray-500 hover:text-gray-600 flex items-center justify-center gap-1 mx-auto text-[10px] md:text-sm font-bold bg-gray-100 px-3 py-1 md:px-4 md:py-2 rounded-full">${icons.help} Regel</button>`;
             }
             if (state.level === 4 && state.showHint && state.status !== 'success' && !state.showSolution) {
-                html += `
-                <div class="mt-2 md:mt-4 bg-gray-100 p-2 md:p-3 rounded-lg text-[10px] md:text-sm max-w-xs md:max-w-md mx-auto text-left text-gray-700">
-                    ${t.hint} <br/>
-                    ${state.topic === 2 ? "Tipp: 2. Zahl muss positiv sein." : ""}
-                    ${state.topic === 3 ? "Tipp: 2. Zahl muss negativ sein." : ""}
-                    ${state.topic === 4 ? "Alles erlaubt, hauptsache das Ergebnis stimmt!" : ""}
-                </div>`;
+                html += `<div class="mt-2 md:mt-4 bg-gray-100 p-2 md:p-3 rounded-lg text-[10px] md:text-sm max-w-xs md:max-w-md mx-auto text-left text-gray-700">${t.hint} <br/>${state.topic === 2 ? "Tipp: Bei 'Addition' muss das Rechenzeichen ein Plus (+) sein." : ""}${state.topic === 3 ? "Tipp: Bei 'Subtraktion' muss das Rechenzeichen ein Minus (-) sein." : ""}${state.topic === 4 ? "Alles erlaubt, hauptsache das Ergebnis stimmt!" : ""}</div>`;
             }
 
             html += `</div></div>`; // End Actions Area & Wrapper
 
             container.innerHTML = html;
+            attachTrainingListeners();
+        }
 
-            // Attach input event listeners
-            if (document.getElementById('in-simp')) {
-                document.getElementById('in-simp').addEventListener('input', e => state.ansSimp = e.target.value);
-            }
-            if (document.getElementById('in-res')) {
-                document.getElementById('in-res').addEventListener('input', e => state.ansRes = e.target.value);
-            }
-            if (document.getElementById('in-open1')) {
-                document.getElementById('in-open1').addEventListener('input', e => state.openVal1 = e.target.value);
-            }
-            if (document.getElementById('in-open2')) {
-                document.getElementById('in-open2').addEventListener('input', e => state.openVal2 = e.target.value);
-            }
-            if (document.getElementById('in-openOp')) {
-                document.getElementById('in-openOp').addEventListener('change', e => state.openOp = e.target.value);
-            }
+        function attachTrainingListeners() {
+            if (document.getElementById('in-simp')) document.getElementById('in-simp').addEventListener('input', e => state.ansSimp = e.target.value);
+            if (document.getElementById('in-res')) document.getElementById('in-res').addEventListener('input', e => state.ansRes = e.target.value);
+            if (document.getElementById('in-open1')) document.getElementById('in-open1').addEventListener('input', e => state.openVal1 = e.target.value);
+            if (document.getElementById('in-open2')) document.getElementById('in-open2').addEventListener('input', e => state.openVal2 = e.target.value);
+            if (document.getElementById('in-openOp')) document.getElementById('in-openOp').addEventListener('change', e => state.openOp = e.target.value);
 
-            // Set Focus if idle (Kein Autofokus auf Mobile, um ständiges Pop-up der Tastatur zu vermeiden)
             if (state.status === 'idle' && !state.isMobile) {
                 setTimeout(() => {
-                    let elToFocus;
-                    if (state.level === 4) {
-                        elToFocus = document.getElementById('in-open1');
-                    } else if (state.topic === 1 || actualRequireSimp) {
-                        elToFocus = document.getElementById('in-simp');
-                    } else {
-                        elToFocus = document.getElementById('in-res');
-                    }
+                    let elToFocus = document.getElementById('in-open1') || document.getElementById('in-simp') || document.getElementById('in-res');
                     if (elToFocus) elToFocus.focus();
                 }, 50);
             }
         }
 
-        function renderAll() {
-            updateTabs();
-            updateLevelsAndToggle();
-            updateInfoBox();
-            updateWorkspace();
+        // --- GAME WORKSPACE ---
+        function renderGameWorkspace() {
+            const container = document.getElementById('workspace-container');
+            let html = `<div class="flex flex-col items-center w-full h-full justify-center relative">`;
+            const m = state.game.activeMode;
+
+            if (state.status === 'gameover') {
+                html += `
+                <div class="animate-zoom-in text-center">
+                    <h2 class="text-3xl md:text-5xl font-black text-slate-800 mb-2">GAME OVER</h2>
+                    <p class="text-lg md:text-xl text-purple-600 font-bold mb-6">Punkte/Level: ${(m===1||m===4)?state.game.score:state.level}</p>
+                    <button onclick="startGame()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 mx-auto">
+                        ${icons.refresh} Nochmal Spielen
+                    </button>
+                </div></div>`;
+                container.innerHTML = html;
+                return;
+            }
+
+            if (state.status === 'idle' && !state.game.timerId) {
+                const ins = gameInstructions[m];
+                html += `
+                <div class="text-center w-full max-w-md mx-auto animate-zoom-in">
+                    <div class="text-5xl md:text-6xl mb-4">${gameIcons[m]}</div>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-4">${ins.title}</h2>
+                    <div class="bg-purple-50 border border-purple-200 p-4 rounded-xl mb-6 shadow-sm text-left">
+                        <h3 class="font-bold text-purple-800 mb-2 text-sm flex items-center gap-1">
+                            ${icons.bookOpen} Spielanleitung
+                        </h3>
+                        <p class="text-gray-700 text-xs md:text-sm leading-relaxed">
+                            ${ins.desc}
+                        </p>
+                    </div>
+                    <button onclick="startGame()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 mx-auto">
+                        ${icons.gamepad} Start
+                    </button>
+                </div></div>`;
+                container.innerHTML = html;
+                return;
+            }
+
+            if (m === 1 || m === 4) {
+                // GAME 1 (Sprint) & GAME 4 (Arcade) UI
+                const rawSize = state.isMobile ? 'text-4xl' : 'text-6xl';
+                let resClass = `w-32 text-center text-3xl p-3 border-2 rounded-xl outline-none transition-all font-mono `;
+                if (state.resStatus === 'error') resClass += "border-red-500 bg-red-50 text-red-700 animate-shake";
+                else if (state.resStatus === 'correct') resClass += "border-green-500 bg-green-50 text-green-700 animate-pulse-fast";
+                else resClass += "border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-100";
+                
+                let bigTimeClass = 'text-purple-600 animate-normal-tick';
+                if (state.resStatus === 'correct') bigTimeClass = 'text-green-500 animate-pop-green';
+                else if (state.game.time <= 10) bigTimeClass = 'text-red-600 animate-danger-tick';
+
+                html += `
+                <div class="w-full flex-1 flex flex-col items-center justify-center relative">
+                    
+                    <div id="big-time-container" class="inline-block text-6xl md:text-8xl font-black mb-6 md:mb-10 transition-colors ${bigTimeClass}">
+                        <span id="big-time">${state.game.time}</span><span class="text-3xl md:text-5xl text-gray-300">s</span>
+                    </div>
+
+                    ${(m === 4 && state.resStatus === 'correct') ? '<div class="absolute top-0 md:-top-10 text-green-500 font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50">+10s</div>' : ''}
+                    ${(m === 1 && state.resStatus === 'correct') ? '<div class="absolute top-0 md:-top-10 text-green-500 font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50">+3s</div>' : ''}
+                    ${(m === 1 && state.resStatus === 'error') ? '<div class="absolute top-0 md:-top-10 text-red-500 font-black text-5xl md:text-7xl animate-float-up pointer-events-none z-50">-5s</div>' : ''}
+                    
+                    <div class="${rawSize} font-black text-slate-800 font-mono tracking-tight mb-8">${state.task.raw}</div>
+                    
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl font-bold text-gray-400">=</span>
+                        <input id="game-in-res" type="text" inputmode="decimal" class="${resClass}" placeholder="?" value="${state.ansRes}">
+                    </div>
+                    <button onclick="${m===1 ? 'checkGame1()' : 'checkGame4()'}" class="mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-8 rounded-lg shadow-md transition-all md:hidden">Prüfen</button>
+                </div>`;
+            } 
+            else if (m === 2) {
+                // GAME 2: EXPEDITION UI
+                const s = state.game.expedition.start;
+                const t = state.game.expedition.target;
+                const pPercentStart = ((s + 15) / 30) * 100;
+                const pPercentTarget = ((t + 15) / 30) * 100;
+
+                html += `
+                <div class="w-full flex-1 flex flex-col items-center justify-center max-w-lg mx-auto">
+                    
+                    <!-- Numberline -->
+                    <div class="w-full h-4 bg-gray-200 rounded-full relative mb-12 mt-12">
+                        <div class="absolute w-full flex justify-between text-[10px] text-gray-400 -top-5">
+                            <span>-15</span><span>0</span><span>15</span>
+                        </div>
+                        <div class="absolute h-full w-0.5 bg-gray-400 left-1/2 -translate-x-1/2"></div>
+                        
+                        <!-- Start Marker (Strich & Zahl) -->
+                        <div class="absolute h-6 w-0.5 bg-blue-500 -top-1" style="left: ${pPercentStart}%; transform: translateX(-50%)"></div>
+                        <div class="absolute -bottom-6 text-xs font-bold text-blue-600" style="left: ${pPercentStart}%; transform: translateX(-50%)">${s}</div>
+                        <!-- Start Avatar -->
+                        <div class="absolute -top-8 -translate-x-1/2 text-2xl transition-all duration-500 z-10" style="left: ${pPercentStart}%">🤠</div>
+                        
+                        <!-- Target Marker (Strich & Zahl) -->
+                        <div class="absolute h-6 w-0.5 bg-purple-500 -top-1" style="left: ${pPercentTarget}%; transform: translateX(-50%)"></div>
+                        <div class="absolute -bottom-6 text-xs font-bold text-purple-600" style="left: ${pPercentTarget}%; transform: translateX(-50%)">${t}</div>
+                        <!-- Target Gem -->
+                        <div class="absolute -top-8 -translate-x-1/2 text-2xl animate-pulse z-0" style="left: ${pPercentTarget}%">💎</div>
+                    </div>
+
+                    <h2 class="text-sm md:text-base font-bold text-slate-600 mb-6">Wie kommst du zum Schatz?</h2>
+                    
+                    <div class="flex items-center justify-center gap-2 md:gap-3 bg-purple-50 p-4 rounded-2xl border border-purple-200 w-full ${state.resStatus === 'error' ? 'animate-shake border-red-400 bg-red-50' : ''}">
+                        <div class="text-xl md:text-2xl font-black text-slate-800">${s < 0 ? `(${s})` : s}</div>
+                        
+                        <!-- PREFILLED OPERATOR -->
+                        <div class="text-xl md:text-2xl font-black text-purple-600 mx-1 md:mx-2">${state.openOp}</div>
+                        
+                        <span class="text-lg md:text-xl font-bold">(</span>
+                        <input id="game-in-val" type="text" inputmode="decimal" class="w-16 md:w-20 text-center text-lg md:text-xl p-2 md:p-3 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="?" value="${state.ansRes}">
+                        <span class="text-lg md:text-xl font-bold">)</span>
+                        
+                        <span class="text-xl md:text-2xl font-bold text-gray-400 ml-1">= ${t < 0 ? `(${t})` : t}</span>
+                    </div>
+
+                    <button onclick="checkGame2()" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-12 rounded-xl shadow-lg transition-all text-sm md:text-base">
+                        Los! ${state.isMobile ? '' : '(Enter)'}
+                    </button>
+                </div>`;
+            }
+            else if (m === 3) {
+                // GAME 3: PYRAMID UI
+                let p = state.game.pyramid;
+                if (!p || p.expectedGrid.length === 0) startGame(); // Safety
+                p = state.game.pyramid; // reload
+
+                html += `
+                <div class="w-full flex-1 flex flex-col items-center justify-center overflow-x-auto no-scrollbar py-4 relative">
+                    
+                    <div class="bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 mb-6 border border-indigo-200 shadow-sm animate-zoom-in">
+                        ${p.op === '+' ? icons.flagPlus + "Regel: Addieren" : icons.flagMinus + "Regel: Subtrahieren"}
+                    </div>
+
+                    <div class="flex flex-col items-center gap-1 md:gap-2">`;
+                
+                // Render Rows Top to Bottom
+                for (let r = 0; r < p.size; r++) {
+                    html += `<div class="flex justify-center gap-1 md:gap-2">`;
+                    for (let c = 0; c <= r; c++) {
+                        let cell = p.userGrid[r][c];
+                        let isBase = (r === p.size - 1);
+                        
+                        if (isBase) {
+                            html += `<div class="w-14 h-10 md:w-20 md:h-12 flex items-center justify-center bg-slate-700 text-white font-bold rounded shadow-inner text-sm md:text-base border-b-4 border-slate-900">${cell.val}</div>`;
+                        } else {
+                            let bColor = "border-gray-300 bg-white focus:border-purple-500";
+                            if (cell.status === 'correct') bColor = "border-green-500 bg-green-50 text-green-800 font-bold";
+                            else if (cell.status === 'folgefehler') bColor = "border-orange-500 bg-orange-50 text-orange-800 font-bold";
+                            else if (cell.status === 'error') bColor = "border-red-500 bg-red-50 text-red-800 animate-shake font-bold";
+                            
+                            html += `<input id="pyr-${r}-${c}" type="text" inputmode="decimal" class="w-14 h-10 md:w-20 md:h-12 text-center text-sm md:text-base border-2 rounded outline-none transition-all ${bColor}" value="${cell.val}" ${cell.status==='correct' ? 'disabled' : ''}>`;
+                        }
+                    }
+                    html += `</div>`;
+                }
+
+                html += `
+                    </div>
+                    <button onclick="checkGame3()" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition-all text-sm md:text-base">
+                        Steinreihe prüfen ${state.isMobile ? '' : '(Enter)'}
+                    </button>
+                </div>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            // Attach specific listeners
+            if ((m === 1 || m === 4) && document.getElementById('game-in-res')) {
+                let el = document.getElementById('game-in-res');
+                el.addEventListener('input', e => state.ansRes = e.target.value);
+                if(!state.isMobile) setTimeout(() => el.focus(), 50);
+            }
+            if (m === 2) {
+                if (document.getElementById('game-in-val')) {
+                    let el = document.getElementById('game-in-val');
+                    el.addEventListener('input', e => state.ansRes = e.target.value);
+                    if(!state.isMobile) setTimeout(() => el.focus(), 50);
+                }
+            }
+            if (m === 3 && !state.isMobile) {
+                setTimeout(() => {
+                    let found = false;
+                    for (let r = state.game.pyramid.size - 2; r >= 0 && !found; r--) {
+                        for (let c = 0; c <= r && !found; c++) {
+                            let el = document.getElementById(`pyr-${r}-${c}`);
+                            if (el && !el.disabled) { el.focus(); found = true; }
+                        }
+                    }
+                }, 50);
+            }
         }
 
-        // --- ACTIONS ---
+        // --- MAIN ACTIONS ---
         function setTopic(t) {
             state.topic = t;
-            if (t === 1 && state.level === 4) state.level = 3;
-            initTask();
+            if (state.game.timerId) { clearInterval(state.game.timerId); state.game.timerId = null; }
+            if (t < 5) {
+                if (t === 1 && state.level === 4) state.level = 3;
+                if (t === 2) state.openOp = '+';
+                if (t === 3) state.openOp = '-';
+                initTask();
+            } else {
+                state.level = 1;
+                state.status = 'idle';
+                
+                // Set initial time for display based on current active Mode
+                if (state.game.activeMode === 1) state.game.time = 60;
+                else if (state.game.activeMode === 4) state.game.time = 30;
+
+                renderAll();
+            }
         }
 
         function setLevel(l) {
-            state.level = l;
-            initTask();
+            if (state.topic < 5) {
+                state.level = l;
+                initTask();
+            }
+        }
+
+        function setGameMode(id) {
+            state.game.activeMode = id;
+            if (state.game.timerId) { clearInterval(state.game.timerId); state.game.timerId = null; }
+            state.status = 'idle';
+            state.level = 1;
+            
+            // Fix Initial Time for the Start Screen Display
+            if (id === 1) state.game.time = 60;
+            if (id === 4) state.game.time = 30;
+
+            renderAll();
         }
 
         function setShowHint(show) {
@@ -635,23 +1016,22 @@
         }
 
         document.getElementById('require-simp-btn').addEventListener('click', () => {
-            state.requireSimp = !state.requireSimp;
-            renderAll();
+            if(state.topic < 5) {
+                state.requireSimp = !state.requireSimp;
+                renderAll();
+            }
         });
 
+        // --- TRAINING LOGIC ---
         function initTask() {
             state.task = generateTask(state.topic, state.level);
-            state.ansSimp = '';
-            state.ansRes = '';
-            state.openVal1 = '';
-            state.openVal2 = '';
-            state.openOp = '+';
-            state.status = 'idle';
-            state.failCount = 0;
-            state.showSolution = false;
-            state.simpStatus = '';
-            state.resStatus = '';
-            state.showHint = false;
+            state.ansSimp = ''; state.ansRes = ''; state.openVal1 = ''; state.openVal2 = '';
+            if (state.topic === 2) state.openOp = '+';
+            else if (state.topic === 3) state.openOp = '-';
+            else state.openOp = '+';
+            
+            state.status = 'idle'; state.failCount = 0; state.showSolution = false;
+            state.simpStatus = ''; state.resStatus = ''; state.showHint = false;
             renderAll();
         }
 
@@ -661,6 +1041,7 @@
         }
 
         function checkAnswer() {
+            if (state.topic >= 5) { checkGame(); return; }
             if (state.status === 'success' || state.showSolution) return;
 
             const isAlreadySimplified = state.topic === 4 && state.level === 3;
@@ -669,31 +1050,19 @@
             if (state.task.isOpen) {
                 const v1 = parseFloat(state.openVal1.replace(',', '.'));
                 const v2 = parseFloat(state.openVal2.replace(',', '.'));
-                if (isNaN(v1) || isNaN(v2)) {
-                    state.status = 'error';
-                    handleFail();
-                    updateWorkspace();
-                    return;
-                }
+                if (isNaN(v1) || isNaN(v2)) { state.status = 'error'; handleFail(); updateWorkspace(); return; }
                 const res = state.openOp === '+' ? v1 + v2 : v1 - v2;
                 
                 let topicValid = true;
-                if (state.topic === 2 && v2 < 0) topicValid = false;
-                else if (state.topic === 3 && v2 >= 0) topicValid = false;
+                if (state.topic === 2 && state.openOp !== '+') topicValid = false;
+                else if (state.topic === 3 && state.openOp !== '-') topicValid = false;
 
-                if (Math.abs(res - state.task.target) < 0.01 && topicValid) {
-                    state.status = 'success';
-                } else {
-                    state.status = 'error';
-                    handleFail();
-                }
-                updateWorkspace();
-                return;
+                if (Math.abs(res - state.task.target) < 0.01 && topicValid) state.status = 'success';
+                else { state.status = 'error'; handleFail(); }
+                updateWorkspace(); return;
             }
 
-            let isCorrect = true;
-            let cSimpStatus = '';
-            let cResStatus = '';
+            let isCorrect = true; let cSimpStatus = ''; let cResStatus = '';
 
             if (state.topic === 1 || actualRequireSimp) {
                 const isSimpCorrect = simplifyStr(state.ansSimp) === simplifyStr(state.task.simplified);
@@ -705,52 +1074,270 @@
                 const parsedRes = parseFloat(state.ansRes.replace(',', '.'));
                 const isResCorrect = !isNaN(parsedRes) && Math.abs(parsedRes - state.task.result) < 0.01;
 
-                if (isResCorrect) {
-                    cResStatus = 'correct';
-                } else {
+                if (isResCorrect) cResStatus = 'correct';
+                else {
                     isCorrect = false;
                     if ((state.topic === 1 || actualRequireSimp) && cSimpStatus === 'error') {
                         const userSimpEval = evaluateSimpleMath(state.ansSimp);
-                        if (!isNaN(userSimpEval) && Math.abs(parsedRes - userSimpEval) < 0.01) {
-                            cResStatus = 'folgefehler';
-                        } else {
-                            cResStatus = 'error';
-                        }
-                    } else {
-                        cResStatus = 'error';
-                    }
+                        if (!isNaN(userSimpEval) && Math.abs(parsedRes - userSimpEval) < 0.01) cResStatus = 'folgefehler';
+                        else cResStatus = 'error';
+                    } else cResStatus = 'error';
                 }
             }
 
-            state.simpStatus = cSimpStatus;
-            state.resStatus = cResStatus;
-
-            if (isCorrect) {
-                state.status = 'success';
-            } else {
-                state.status = 'error';
-                handleFail();
-            }
+            state.simpStatus = cSimpStatus; state.resStatus = cResStatus;
+            if (isCorrect) state.status = 'success'; else { state.status = 'error'; handleFail(); }
             updateWorkspace();
+        }
+
+        // --- GAME LOGIC ---
+        function startGame() {
+            state.status = 'playing';
+            state.resStatus = '';
+            const m = state.game.activeMode;
+            
+            if (m === 1 || m === 4) {
+                state.game.score = 0;
+                state.game.time = (m === 1) ? 60 : 30; // 60s for Sprint, 30s for Arcade
+                state.level = rnd(1, 3);
+                state.task = generateTask(5, state.level);
+                state.ansRes = '';
+                
+                if (state.game.timerId) clearInterval(state.game.timerId);
+                state.game.timerId = setInterval(() => {
+                    state.game.time -= 1;
+                    if (state.game.time <= 0) {
+                        gameOver();
+                    } else {
+                        // Quick update for Sidebar
+                        const sideTime = document.getElementById('sidebar-time');
+                        if (sideTime) {
+                            sideTime.innerText = state.game.time + 's';
+                            if (state.resStatus !== 'correct') { // Prevent overriding pop animation
+                                sideTime.className = state.game.time <= 10 
+                                    ? 'inline-block text-lg font-black text-red-600 animate-danger-tick' 
+                                    : 'inline-block text-lg font-black text-purple-600 animate-normal-tick';
+                            }
+                        }
+
+                        // Quick update for Big Time
+                        if (m === 1 || m === 4) {
+                            const bigTime = document.getElementById('big-time');
+                            if (bigTime) bigTime.innerText = state.game.time;
+                            const container = document.getElementById('big-time-container');
+                            if (container && state.resStatus !== 'correct') {
+                                container.className = state.game.time <= 10 
+                                    ? 'inline-block text-6xl md:text-8xl font-black mb-6 md:mb-10 transition-colors text-red-600 animate-danger-tick'
+                                    : 'inline-block text-6xl md:text-8xl font-black mb-6 md:mb-10 transition-colors text-purple-600 animate-normal-tick';
+                            }
+                        }
+                    }
+                }, 1000);
+            } 
+            else if (m === 2) {
+                state.game.hearts = 3;
+                state.level = 1;
+                generateGame2Level();
+            }
+            else if (m === 3) {
+                state.game.hearts = 3;
+                state.level = 1;
+                generateGame3Level();
+            }
+            renderAll();
+        }
+
+        function gameOver() {
+            state.status = 'gameover';
+            if (state.game.timerId) { clearInterval(state.game.timerId); state.game.timerId = null; }
+            
+            let m = state.game.activeMode;
+            let currentScore = (m === 1 || m === 4) ? state.game.score : state.level;
+            if (currentScore > state.game.highscores[m]) {
+                state.game.highscores[m] = currentScore;
+            }
+            renderAll();
+        }
+
+        function checkGame() {
+            if (state.status !== 'playing') return;
+            const m = state.game.activeMode;
+
+            if (m === 1) checkGame1();
+            else if (m === 2) checkGame2();
+            else if (m === 3) checkGame3();
+            else if (m === 4) checkGame4();
+        }
+
+        function checkGame1() {
+            const parsedRes = parseFloat(state.ansRes.replace(',', '.'));
+            if (!isNaN(parsedRes) && Math.abs(parsedRes - state.task.result) < 0.01) {
+                // Correct
+                state.resStatus = 'correct';
+                state.game.score += 10 * state.level;
+                state.game.time += 3;
+                
+                renderAll(); // Re-render to show visual feedback immediately
+                
+                setTimeout(() => {
+                    state.level = rnd(1, 3);
+                    state.task = generateTask(5, state.level);
+                    state.ansRes = '';
+                    state.resStatus = '';
+                    renderAll();
+                }, 500);
+            } else {
+                // Wrong
+                state.resStatus = 'error';
+                state.game.time = Math.max(0, state.game.time - 5);
+                renderAll();
+                
+                if (state.game.time === 0) gameOver();
+                else setTimeout(() => { state.resStatus = ''; renderAll(); }, 500);
+            }
+        }
+
+        function checkGame4() {
+            const parsedRes = parseFloat(state.ansRes.replace(',', '.'));
+            if (!isNaN(parsedRes) && Math.abs(parsedRes - state.task.result) < 0.01) {
+                // Correct
+                state.resStatus = 'correct';
+                state.game.score += 1; 
+                state.game.time += 10;
+                
+                renderAll(); // Re-render to show Green Timer & Floating Text
+
+                setTimeout(() => {
+                    state.level = rnd(1, 3);
+                    state.task = generateTask(5, state.level);
+                    state.ansRes = '';
+                    state.resStatus = '';
+                    renderAll();
+                }, 500);
+            } else {
+                // Wrong
+                state.resStatus = 'error';
+                renderAll();
+                setTimeout(() => { state.resStatus = ''; renderAll(); }, 500);
+            }
+        }
+
+        function checkGame2() {
+            const v = parseFloat(state.ansRes.replace(',', '.'));
+            if (isNaN(v)) { state.resStatus = 'error'; renderAll(); setTimeout(()=> {state.resStatus=''; renderAll();}, 500); return; }
+            
+            const s = state.game.expedition.start;
+            const t = state.game.expedition.target;
+            const res = state.openOp === '+' ? s + v : s - v;
+
+            if (Math.abs(res - t) < 0.01) {
+                state.resStatus = 'correct';
+                state.level++;
+                setTimeout(() => {
+                    generateGame2Level();
+                    state.resStatus = '';
+                    renderAll();
+                }, 1000);
+            } else {
+                state.resStatus = 'error';
+                state.game.hearts--;
+                if (state.game.hearts <= 0) setTimeout(() => gameOver(), 500);
+                setTimeout(() => { state.resStatus = ''; renderAll(); }, 500);
+            }
+            renderAll();
+        }
+
+        function checkGame3() {
+            let p = state.game.pyramid;
+            let allCorrect = true;
+            let hasError = false;
+
+            // Check from bottom to top
+            for (let r = p.size - 2; r >= 0; r--) {
+                for (let c = 0; c <= r; c++) {
+                    let el = document.getElementById(`pyr-${r}-${c}`);
+                    if (!el) continue;
+                    let userValStr = el.value.trim().replace(',', '.');
+                    let userVal = parseFloat(userValStr);
+                    
+                    let expectedVal = p.expectedGrid[r][c];
+                    let status = 'error';
+
+                    if (userValStr === "" || isNaN(userVal)) {
+                        status = 'error';
+                        allCorrect = false;
+                        hasError = true;
+                    } else if (Math.abs(userVal - expectedVal) < 0.01) {
+                        status = 'correct';
+                    } else {
+                        // Check folgefehler
+                        let leftStr = r + 1 === p.size - 1 ? p.base[c] : document.getElementById(`pyr-${r+1}-${c}`).value.replace(',', '.');
+                        let rightStr = r + 1 === p.size - 1 ? p.base[c+1] : document.getElementById(`pyr-${r+1}-${c+1}`).value.replace(',', '.');
+                        
+                        let folgeLeft = parseFloat(leftStr);
+                        let folgeRight = parseFloat(rightStr);
+
+                        if (!isNaN(folgeLeft) && !isNaN(folgeRight)) {
+                            let folgeExpected = p.op === '+' ? folgeLeft + folgeRight : folgeLeft - folgeRight;
+                            if (Math.abs(userVal - folgeExpected) < 0.01) {
+                                status = 'folgefehler';
+                                allCorrect = false; 
+                            } else {
+                                status = 'error';
+                                allCorrect = false;
+                                hasError = true;
+                            }
+                        } else {
+                            status = 'error';
+                            allCorrect = false;
+                            hasError = true;
+                        }
+                    }
+                    p.userGrid[r][c] = { val: userValStr, status: status };
+                }
+            }
+
+            if (allCorrect) {
+                state.level++;
+                setTimeout(() => {
+                    generateGame3Level();
+                    renderAll();
+                }, 1000);
+            } else if (hasError) {
+                state.game.hearts--;
+                if (state.game.hearts <= 0) setTimeout(() => gameOver(), 500);
+            }
+            renderAll();
         }
 
         // Global Keydown (Enter to submit/next)
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                if (state.status === 'success' || state.showSolution) {
-                    e.preventDefault();
-                    initTask();
+                if (state.topic < 5) {
+                    if (state.status === 'success' || state.showSolution) { e.preventDefault(); initTask(); } 
+                    else { e.preventDefault(); checkAnswer(); }
                 } else {
-                    e.preventDefault();
-                    checkAnswer();
+                    if (state.status === 'idle') { e.preventDefault(); startGame(); }
+                    else if (state.status === 'gameover') { e.preventDefault(); startGame(); }
+                    else if (state.status === 'playing') {
+                        e.preventDefault(); checkGame();
+                    }
                 }
-            } else if (e.key === ' ' && (state.status === 'success' || state.showSolution)) {
-                e.preventDefault();
-                initTask();
+            } else if (e.key === ' ') {
+                if (state.topic < 5 && (state.status === 'success' || state.showSolution)) { e.preventDefault(); initTask(); }
+                else if (state.topic === 5 && state.status === 'gameover') { e.preventDefault(); startGame(); }
             }
         });
 
         // Initialize App
+        function renderAll() {
+            updateTabs();
+            updateLevelsAndToggle();
+            updateSideBoxes();
+            updateWorkspace();
+        }
+
+        renderAll();
         initTask();
 
     </script>
