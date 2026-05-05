@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rationale Zahlen Trainingslager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+        @keyframes zoom-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-zoom-in {
+            animation: zoom-in 0.2s ease-out forwards;
+        }
+        
+        /* Toggle Switch CSS */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #22c55e;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #22c55e;
+        }
+        .toggle-checkbox:checked + .toggle-label span {
+            transform: translateX(1.5rem);
+        }
+
+        /* Details/Summary marker ausblenden */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        /* Scrollbars verstecken, aber Scrollen erlauben falls wirklich nötig */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="h-[100dvh] w-screen bg-gray-100 p-1 sm:p-2 md:p-4 font-sans text-gray-800 flex flex-col overflow-hidden box-border">
+
+    <div class="w-full max-w-6xl mx-auto bg-white rounded-xl md:rounded-2xl shadow-xl flex flex-col h-full overflow-hidden">
+        
+        <!-- HEADER / TABS -->
+        <div class="bg-slate-800 text-white p-2 shrink-0">
+            <h1 id="main-title" class="text-base md:text-xl font-bold text-center mb-2">Rationale Zahlen Trainingslager</h1>
+            <div id="tabs-container">
+                <!-- Tabs rendered by JS -->
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA (Split on PC, Stacked on Mobile) -->
+        <div class="flex flex-col md:flex-row flex-1 p-2 md:p-4 gap-2 md:gap-4 overflow-hidden">
+            
+            <!-- LEFT COLUMN: Controls & Info -->
+            <div class="flex flex-col gap-2 md:gap-4 w-full md:w-1/3 shrink-0 overflow-y-auto no-scrollbar">
+                
+                <!-- CONTROLS -->
+                <div class="flex flex-col bg-gray-50 p-2 md:p-3 rounded-xl border border-gray-200 gap-2 shrink-0">
+                    <div>
+                        <label class="text-xs md:text-sm font-semibold text-gray-500 block mb-1 text-center md:text-left">Schwierigkeitsgrad:</label>
+                        <div id="levels-container" class="flex gap-2 justify-center md:justify-start">
+                            <!-- Levels rendered by JS -->
+                        </div>
+                    </div>
+
+                    <div id="toggle-container" class="hidden flex items-center justify-between w-full gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm mt-1">
+                        <div class="flex items-center gap-1 md:gap-2">
+                            <svg class="w-4 h-4 md:w-5 md:h-5 text-gray-400 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <span id="toggle-label-text" class="text-xs md:text-sm font-medium">Zwischenschritt erzwingen</span>
+                        </div>
+                        <button id="require-simp-btn" class="w-10 h-6 md:w-12 rounded-full transition-colors relative flex items-center bg-gray-300 shrink-0">
+                            <span id="require-simp-knob" class="w-4 h-4 bg-white rounded-full absolute transition-transform translate-x-1"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- INFO BOX -->
+                <div id="info-box-container" class="shrink-0"></div>
+
+                <!-- KEYBOARD HINT (PC/Tablet only) -->
+                <div class="hidden md:flex flex-col items-center justify-center shrink-0 mt-auto pt-4 pb-2 text-xs text-gray-400">
+                    <div class="flex items-center gap-1.5 mb-2 font-semibold text-gray-500">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" ry="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/></svg>
+                        Tastatur-Steuerung
+                    </div>
+                    <p class="leading-relaxed text-center">
+                        <kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-gray-700 font-sans shadow-sm font-bold">⇥ Tab</kbd> wechseln <br/>
+                        <kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-gray-700 font-sans shadow-sm font-bold mt-1 inline-block">↵ Enter</kbd> prüfen / weiter
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Workspace -->
+            <div id="workspace-container" class="flex-1 bg-white border-2 border-slate-100 rounded-xl p-2 md:p-6 shadow-sm text-center relative flex flex-col items-center justify-center overflow-y-auto no-scrollbar">
+                <!-- Content injected by JS -->
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // --- HILFSFUNKTIONEN ---
+        const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const rndSign = () => (Math.random() > 0.5 ? 1 : -1);
+        const rndOp = () => (Math.random() > 0.5 ? '+' : '-');
+
+        const formatNum = (num, withBracket = true, forceSign = false) => {
+            let str = Math.abs(num).toString().replace('.', ',');
+            if (withBracket) {
+                return num < 0 ? `(-${str})` : `(+${str})`;
+            }
+            return num < 0 ? `-${str}` : str;
+        };
+
+        const simplifyStr = (str) => String(str).replace(/\s+/g, '').replace(/\./g, ',');
+
+        const evaluateSimpleMath = (str) => {
+            const s = String(str).replace(/\s+/g, '').replace(/,/g, '.');
+            if (!s) return NaN;
+            const matches = s.match(/[+-]?\d+(?:\.\d+)?/g);
+            if (!matches) return NaN;
+            if (matches.join('') !== s) return NaN;
+            return matches.reduce((acc, val) => acc + parseFloat(val), 0);
+        };
+
+        // --- ICONS (SVG Strings) ---
+        const icons = {
+            bookOpen: `<svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+            chevronRight: `<svg class="w-3 h-3 md:w-4 md:h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+            check: `<svg class="w-4 h-4 md:w-5 md:h-5 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+            checkLg: `<svg class="w-5 h-5 md:w-6 md:h-6 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+            xLg: `<svg class="w-5 h-5 md:w-6 md:h-6 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+            refresh: `<svg class="w-4 h-4 md:w-5 md:h-5 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
+            help: `<svg class="w-3 h-3 md:w-4 md:h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
+            alert: `<svg class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`
+        };
+
+        // --- STATE ---
+        let state = {
+            isMobile: window.innerWidth < 768,
+            topic: 1,
+            level: 1,
+            requireSimp: false,
+            task: null,
+            ansSimp: '',
+            ansRes: '',
+            openVal1: '',
+            openVal2: '',
+            openOp: '+',
+            status: 'idle', // 'idle', 'success', 'error'
+            failCount: 0,
+            showSolution: false,
+            simpStatus: '', // '', 'correct', 'error'
+            resStatus: '', // '', 'correct', 'error', 'folgefehler'
+            showHint: false
+        };
+
+        // Fenstergröße überwachen
+        window.addEventListener('resize', () => {
+            const wasMobile = state.isMobile;
+            state.isMobile = window.innerWidth < 768;
+            if (wasMobile !== state.isMobile) {
+                renderAll(); // Oberfläche neu berechnen, wenn sich der Gerätetyp ändert
+            }
+        });
+
+        // --- INFO BOX DATA ---
+        const infos = {
+            1: {
+                title: "Vereinfachte Schreibweise",
+                content: `
+                    <ul class="list-disc pl-4 md:pl-5 space-y-1 md:space-y-2 text-xs md:text-sm text-gray-700">
+                    <li>Klammern/Vorzeichen bei positiven Zahlen weglassen: <b>(+5) = 5</b></li>
+                    <li>Klammer am <b>Anfang</b> weglassen: <b>(-4) + (+1) = -4 + 1</b></li>
+                    <li><b>Regeln für Doppelzeichen:</b></li>
+                    <ul class="list-none pl-1 md:pl-2 space-y-1 font-mono text-[10px] md:text-xs bg-gray-100 p-1 md:p-2 rounded">
+                        <li>+(+) ➔ + &nbsp;|&nbsp; -(-) ➔ +</li>
+                        <li>+(-) ➔ - &nbsp;|&nbsp; -(+) ➔ -</li>
+                    </ul>
+                    <li><i>Merke: Gleiche Zeichen ➔ Plus, verschiedene Zeichen ➔ Minus.</i></li>
+                    </ul>`
+            },
+            2: {
+                title: "Mit positiven Zahlen rechnen",
+                content: `
+                    <ul class="list-disc pl-4 md:pl-5 space-y-1 md:space-y-2 text-xs md:text-sm text-gray-700">
+                    <li><b>Addieren (+):</b> Auf der Zahlengeraden nach <b>rechts</b>. <br/>Beispiel: -4 + 3 ➔ -1</li>
+                    <li><b>Subtrahieren (-):</b> Auf der Zahlengeraden nach <b>links</b>.<br/>Beispiel: 2 - 5 ➔ -3</li>
+                    </ul>`
+            },
+            3: {
+                title: "Mit negativen Zahlen rechnen",
+                content: `
+                    <ul class="list-disc pl-4 md:pl-5 space-y-1 md:space-y-2 text-xs md:text-sm text-gray-700">
+                    <li><b>Addieren einer negativen Zahl +(−):</b><br/>Gleiches wie Subtrahieren. Gehe nach <b>links</b>.<br/><i>(+2) + (-5) = 2 - 5 = -3</i></li>
+                    <li><b>Subtrahieren einer negativen Zahl −(−):</b><br/>Gleiches wie Addieren. Gehe nach <b>rechts</b>.<br/><i>(-4) - (-7) = -4 + 7 = 3</i></li>
+                    </ul>`
+            },
+            4: {
+                title: "Gemischte Aufgaben",
+                content: `
+                    <p class="text-xs md:text-sm text-gray-700">
+                    <b>Tipp:</b> Löse zuerst alle Klammern auf, indem du die Vorzeichenregeln anwendest. Schreibe die vereinfachte Aufgabe auf. Rechne danach von links nach rechts!
+                    </p>`
+            }
+        };
+
+        // --- AUFGABEN GENERATOR ---
+        const generateTask = (topic, level) => {
+            let a, b, c, op1, op2, raw, simplified, result, hint;
+
+            if (level === 4) {
+                let target = rnd(-20, 20);
+                return {
+                    isOpen: true, target: target,
+                    raw: `Finde Zahlen!`,
+                    hint: "Nutze die Regeln, um auf das Ergebnis zu kommen."
+                };
+            }
+
+            const fmt = (n) => n.toString().replace('.', ',');
+
+            switch (topic) {
+                case 1:
+                    if (level === 1) {
+                        a = rnd(1, 10); b = rnd(1, 10); op1 = rndOp();
+                        raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
+                        simplified = `${a} ${op1 === '+' ? '+' : '-'} ${b}`;
+                        hint = op1 === '+' ? "+(+) wird zu +. Lass die Klammern weg." : "-(+) wird zu -. Lass die Klammern weg.";
+                    } else if (level === 2) {
+                        a = rnd(-10, -1); b = rnd(1, 10) * rndSign(); op1 = rndOp();
+                        raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
+                        let opSimp = (op1 === '+' && b > 0) || (op1 === '-' && b < 0) ? '+' : '-';
+                        simplified = `${a} ${opSimp} ${Math.abs(b)}`;
+                        hint = op1 === '-' && b < 0 ? "-(-) wird zu +. Die erste Klammer entfällt." : "+(-) und -(+) werden zu -.";
+                    } else {
+                        a = rnd(1, 10) * rndSign(); b = rnd(1, 10) * rndSign(); c = rnd(1, 10) * rndSign();
+                        op1 = rndOp(); op2 = rndOp();
+                        raw = `${formatNum(a)} ${op1} ${formatNum(b)} ${op2} ${formatNum(c)}`;
+                        let opSimp1 = (op1 === '+' && b > 0) || (op1 === '-' && b < 0) ? '+' : '-';
+                        let opSimp2 = (op2 === '+' && c > 0) || (op2 === '-' && c < 0) ? '+' : '-';
+                        simplified = `${a} ${opSimp1} ${Math.abs(b)} ${opSimp2} ${Math.abs(c)}`;
+                        hint = "Schritt für Schritt: Gleiche Zeichen -> Plus, Verschiedene Zeichen -> Minus.";
+                    }
+                    result = level === 3 ? a + (op1 === '+' ? b : -b) + (op2 === '+' ? c : -c) : a + (op1 === '+' ? b : -b);
+                    break;
+                case 2:
+                    a = rnd(1, level === 1 ? 10 : 30) * (level === 2 ? rndSign() : 1);
+                    b = rnd(1, level === 1 ? 10 : 30);
+                    op1 = rndOp();
+                    if (level === 3) {
+                        a = parseFloat((rnd(-50, 50) / 10).toFixed(1));
+                        b = parseFloat((rnd(1, 50) / 10).toFixed(1));
+                    }
+                    raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
+                    simplified = `${fmt(a)} ${op1 === '+' ? '+' : '-'} ${fmt(b)}`;
+                    result = Math.round((a + (op1 === '+' ? b : -b)) * 10) / 10;
+                    hint = op1 === '+' ? `Starte bei ${fmt(a)} und gehe ${fmt(b)} nach rechts.` : `Starte bei ${fmt(a)} und gehe ${fmt(b)} nach links.`;
+                    break;
+                case 3:
+                    a = rnd(1, level === 1 ? 10 : 30) * (level === 1 ? 1 : rndSign());
+                    b = rnd(-30, -1);
+                    if (level === 1) b = rnd(-10, -1);
+                    op1 = rndOp();
+                    if (level === 3) {
+                        a = parseFloat((rnd(-50, 50) / 10).toFixed(1));
+                        b = parseFloat((rnd(-50, -1) / 10).toFixed(1));
+                    }
+                    raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
+                    let effOp = op1 === '+' ? '-' : '+';
+                    simplified = `${fmt(a)} ${effOp} ${fmt(Math.abs(b))}`;
+                    result = Math.round((a + (op1 === '+' ? b : -b)) * 10) / 10;
+                    hint = op1 === '+' ? `+(-) wird Minus! Subtrahiere ${fmt(Math.abs(b))}, nach links.` : `-(-) wird Plus! Addiere ${fmt(Math.abs(b))}, nach rechts.`;
+                    break;
+                case 4:
+                    if (level === 3) {
+                        a = rnd(1, 15) * rndSign(); b = rnd(1, 15); c = rnd(1, 15);
+                        op1 = rndOp(); op2 = rndOp();
+                        raw = `${fmt(a)} ${op1} ${fmt(b)} ${op2} ${fmt(c)}`;
+                        simplified = raw;
+                        result = Math.round((a + (op1 === '+' ? b : -b) + (op2 === '+' ? c : -c)) * 10) / 10;
+                        hint = "Rechne Schritt für Schritt von links nach rechts.";
+                    } else {
+                        a = rnd(1, 25) * rndSign(); b = rnd(1, 25) * rndSign();
+                        op1 = rndOp();
+                        raw = `${formatNum(a)} ${op1} ${formatNum(b)}`;
+                        let o1 = (op1 === '+' && b > 0) || (op1 === '-' && b < 0) ? '+' : '-';
+                        simplified = `${fmt(a)} ${o1} ${fmt(Math.abs(b))}`;
+                        result = Math.round((a + (op1 === '+' ? b : -b)) * 10) / 10;
+                        hint = "Gleiche Zeichen = Plus, Verschiedene Zeichen = Minus.";
+                    }
+                    break;
+            }
+            return { raw, simplified, result, hint, isOpen: false };
+        };
+
+        // --- UPDATE UI LOGIC ---
+        
+        function updateTabs() {
+            const container = document.getElementById('tabs-container');
+            container.className = state.isMobile ? 'grid grid-cols-2 gap-1' : 'flex flex-wrap gap-2 justify-center';
+            const labels = ["1. Schreibweise", "2. Positive Zahlen", "3. Negative Zahlen", "4. Gemischt"];
+            let html = '';
+            for (let t = 1; t <= 4; t++) {
+                const activeClasses = state.topic === t ? 'bg-blue-500 text-white shadow-md' : 'bg-slate-700 hover:bg-slate-600 text-white';
+                const sizeClasses = state.isMobile ? 'px-1 py-1.5 text-[11px] leading-tight' : 'px-4 py-2 text-sm md:text-base';
+                html += `<button onclick="setTopic(${t})" class="${sizeClasses} rounded font-medium transition-colors ${activeClasses}">${labels[t-1]}</button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function updateLevelsAndToggle() {
+            const container = document.getElementById('levels-container');
+            let html = '';
+            for (let l = 1; l <= 4; l++) {
+                if (state.topic === 1 && l === 4) continue;
+                const activeClasses = state.level === l ? 'bg-indigo-600 text-white ring-2 ring-indigo-200' : 'bg-white border border-gray-300 text-gray-500 hover:border-indigo-400 hover:text-indigo-600';
+                const sizeClasses = state.isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-base';
+                html += `<button onclick="setLevel(${l})" class="${sizeClasses} rounded-full flex items-center justify-center font-bold transition-all ${activeClasses}" title="${l===4 ? 'Offene Aufgaben' : 'Level '+l}">${l === 4 ? '∞' : l}</button>`;
+            }
+            container.innerHTML = html;
+
+            const toggleContainer = document.getElementById('toggle-container');
+            const isAlreadySimplified = state.topic === 4 && state.level === 3;
+            if (state.topic > 1 && state.level < 4 && !isAlreadySimplified) {
+                toggleContainer.classList.remove('hidden');
+                toggleContainer.classList.add('flex');
+                
+                const btn = document.getElementById('require-simp-btn');
+                const knob = document.getElementById('require-simp-knob');
+                
+                document.getElementById('toggle-label-text').innerText = state.isMobile ? "Zwischenschritt" : "Zwischenschritt erzwingen";
+
+                if (state.requireSimp) {
+                    btn.classList.replace('bg-gray-300', 'bg-green-500');
+                    if(state.isMobile) knob.classList.replace('translate-x-1', 'translate-x-5');
+                    else knob.classList.replace('translate-x-1', 'translate-x-7');
+                } else {
+                    btn.classList.replace('bg-green-500', 'bg-gray-300');
+                    if(state.isMobile) knob.classList.replace('translate-x-5', 'translate-x-1');
+                    else knob.classList.replace('translate-x-7', 'translate-x-1');
+                }
+            } else {
+                toggleContainer.classList.add('hidden');
+                toggleContainer.classList.remove('flex');
+            }
+        }
+
+        function updateInfoBox() {
+            const container = document.getElementById('info-box-container');
+            const info = infos[state.topic];
+            
+            // Auf Smartphones standardmäßig eingeklappt
+            if (state.isMobile) {
+                container.innerHTML = `
+                    <details class="bg-blue-50 border-l-4 border-blue-500 p-2 rounded-r-lg shadow-sm">
+                        <summary class="font-bold text-blue-800 cursor-pointer flex items-center gap-2 text-xs">
+                            ${icons.bookOpen} ${info.title} <span class="text-[10px] text-blue-500 font-normal ml-auto border border-blue-200 px-1 rounded bg-white">Info</span>
+                        </summary>
+                        <div class="mt-2 text-xs border-t border-blue-100 pt-2">
+                            ${info.content}
+                        </div>
+                    </details>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 md:p-4 rounded-r-lg shadow-sm">
+                        <div class="flex items-center gap-2 mb-1 md:mb-2">
+                            ${icons.bookOpen}
+                            <h3 class="font-bold text-blue-800 text-sm md:text-base">${info.title}</h3>
+                        </div>
+                        ${info.content}
+                    </div>
+                `;
+            }
+        }
+
+        function updateWorkspace() {
+            if (!state.task) return;
+            const container = document.getElementById('workspace-container');
+            const t = state.task;
+            
+            let html = `<div class="flex flex-col items-center justify-center w-full h-full">`;
+            
+            // Task Display
+            if (state.level === 4) {
+                const targetSize = state.isMobile ? 'text-xl px-3 py-1.5' : 'text-3xl px-6 py-3';
+                html += `
+                <div class="mb-2 md:mb-6 text-center">
+                    <h2 class="text-sm md:text-xl font-bold text-slate-700 mb-1">Offene Aufgabe</h2>
+                    <div class="${targetSize} font-black text-indigo-600 mb-2 bg-indigo-50 inline-block rounded-lg md:rounded-xl border border-indigo-100">
+                        Ziel: ${t.target ? t.target.toString().replace('.', ',') : ''}
+                    </div>
+                    ${state.topic === 2 ? `<p class="text-[10px] md:text-sm text-gray-500">Regel: 2. Zahl muss positiv sein!</p>` : ''}
+                    ${state.topic === 3 ? `<p class="text-[10px] md:text-sm text-gray-500">Regel: 2. Zahl muss negativ sein!</p>` : ''}
+                </div>`;
+            } else {
+                const rawSize = state.isMobile ? (t.raw.length > 15 ? 'text-xl' : 'text-3xl') : 'text-4xl lg:text-5xl';
+                html += `
+                <div class="mb-3 md:mb-6 text-center">
+                    <h2 class="text-[10px] md:text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Löse diese Aufgabe</h2>
+                    <div class="${rawSize} font-black text-slate-800 font-mono tracking-tight">${t.raw}</div>
+                </div>`;
+            }
+
+            // Inputs Area
+            html += `<div class="w-full max-w-sm mx-auto flex flex-col items-center justify-center gap-2 md:gap-4">`;
+            
+            const isAlreadySimplified = state.topic === 4 && state.level === 3;
+            const actualRequireSimp = state.requireSimp && !isAlreadySimplified;
+
+            if (state.level === 4) {
+                // Dynamische Input-Größen
+                const inpW = state.isMobile ? 'w-14 text-sm p-1.5' : 'w-20 text-xl p-2';
+                const brS = state.isMobile ? 'text-base' : 'text-xl';
+                const selP = state.isMobile ? 'p-1 text-sm' : 'p-2 text-xl';
+
+                html += `
+                <div class="flex items-center justify-center gap-1 md:gap-2">
+                    <span class="${brS} font-bold">(</span>
+                    <input id="in-open1" type="text" inputmode="decimal" class="${inpW} text-center border-2 border-gray-300 rounded focus:border-indigo-500 focus:outline-none" placeholder="Zahl" value="${state.openVal1}">
+                    <span class="${brS} font-bold">)</span>
+                    <select id="in-openOp" class="${selP} font-bold border-2 border-gray-300 rounded bg-white focus:outline-none">
+                        <option value="+" ${state.openOp === '+' ? 'selected' : ''}>+</option>
+                        <option value="-" ${state.openOp === '-' ? 'selected' : ''}>-</option>
+                    </select>
+                    <span class="${brS} font-bold">(</span>
+                    <input id="in-open2" type="text" inputmode="decimal" class="${inpW} text-center border-2 border-gray-300 rounded focus:border-indigo-500 focus:outline-none" placeholder="Zahl" value="${state.openVal2}">
+                    <span class="${brS} font-bold">)</span>
+                </div>`;
+            } else {
+                if (state.topic === 1 || actualRequireSimp) {
+                    const textS = state.isMobile ? 'text-lg p-1.5 w-full max-w-[200px]' : 'text-2xl p-2 w-full';
+                    let sClass = `${textS} text-center border-2 rounded-lg outline-none transition-all font-mono `;
+                    if (state.simpStatus === 'correct') sClass += "border-green-500 bg-green-50 text-green-700";
+                    else if (state.simpStatus === 'error') sClass += "border-red-500 bg-red-50 text-red-700";
+                    else sClass += "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+                    
+                    html += `
+                    <div class="flex flex-col items-center w-full">
+                        <label class="text-[10px] md:text-sm font-semibold text-gray-600 mb-0.5 flex items-center gap-1">
+                            ${icons.chevronRight} 1. Schreibweise
+                        </label>
+                        <input id="in-simp" type="text" class="${sClass}" placeholder="z.B. -5 - 3" value="${state.ansSimp}" ${state.showSolution ? 'disabled' : ''}>
+                    </div>`;
+                }
+
+                if (state.topic > 1) {
+                    const textR = state.isMobile ? 'w-20 text-lg p-1.5' : 'w-32 text-2xl p-2';
+                    let rClass = `${textR} text-center border-2 rounded-lg outline-none transition-all font-mono `;
+                    if (state.resStatus === 'correct') rClass += "border-green-500 bg-green-50 text-green-700";
+                    else if (state.resStatus === 'folgefehler') rClass += "border-orange-500 bg-orange-50 text-orange-700";
+                    else if (state.resStatus === 'error') rClass += "border-red-500 bg-red-50 text-red-700";
+                    else rClass += "border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-100";
+
+                    html += `
+                    <div class="flex flex-col items-center mt-1 md:mt-2">
+                        <label class="text-[10px] md:text-sm font-semibold text-gray-600 mb-0.5 flex items-center gap-1">
+                            ${icons.chevronRight} ${actualRequireSimp ? "2. Ergebnis" : "Ergebnis"}
+                        </label>
+                        <input id="in-res" type="text" inputmode="decimal" class="${rClass}" placeholder="=" value="${state.ansRes}" ${state.showSolution ? 'disabled' : ''}>
+                        ${state.resStatus === 'folgefehler' ? `
+                            <span class="text-[10px] md:text-sm text-orange-600 font-bold mt-1 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200 text-center leading-tight">
+                                Folgefehler (Schreibweise falsch)
+                            </span>
+                        ` : ''}
+                    </div>`;
+                }
+            }
+            html += `</div>`; // End Inputs Area
+
+            // Action Buttons & Feedback
+            html += `<div class="mt-4 md:mt-6 flex flex-col items-center gap-2 md:gap-3 w-full">`;
+
+            const btnS = state.isMobile ? 'py-1.5 px-4 text-xs w-[140px]' : 'py-2 px-8 text-base';
+
+            if (state.status === 'idle' && !state.showSolution) {
+                html += `
+                <button onclick="checkAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold ${btnS} rounded-lg shadow-md transition-all flex justify-center items-center gap-1">
+                    ${icons.check} Prüfen
+                </button>`;
+            }
+
+            if (state.status === 'success') {
+                html += `
+                <div class="flex flex-col items-center animate-zoom-in w-full">
+                    <div class="bg-green-100 text-green-700 px-3 py-1.5 md:px-6 md:py-2 rounded-full font-bold flex items-center gap-1 md:gap-2 mb-2 border border-green-300 text-xs md:text-base">
+                        ${icons.checkLg} Richtig gelöst!
+                    </div>
+                    <button onclick="initTask()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold ${btnS} rounded-lg shadow-md transition-all flex justify-center items-center gap-1">
+                        ${icons.refresh} Weiter
+                    </button>
+                </div>`;
+            }
+
+            if (state.status === 'error' && !state.showSolution) {
+                html += `
+                <div class="flex flex-col items-center animate-shake w-full">
+                    <div class="bg-red-100 text-red-700 px-3 py-1.5 md:px-6 md:py-2 rounded-full font-bold flex items-center gap-1 md:gap-2 mb-2 border border-red-300 text-xs md:text-base text-center">
+                        ${icons.xLg} Falsch. (${state.failCount}/3)
+                    </div>
+                    <button onclick="checkAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold ${btnS} rounded-lg shadow-md transition-all flex justify-center items-center gap-1">
+                        Nochmal
+                    </button>
+                </div>`;
+            }
+
+            if (state.showSolution) {
+                html += `
+                <div class="flex flex-col items-center animate-zoom-in w-full max-w-xs md:max-w-md">
+                    <div class="bg-orange-100 text-orange-800 p-2 md:p-4 rounded-lg border border-orange-300 w-full text-left text-[11px] md:text-sm">
+                        <h3 class="font-bold mb-1 md:mb-2 flex items-center gap-1">${icons.alert} Lösung:</h3>
+                        ${(state.topic === 1 || actualRequireSimp) ? `
+                            <p class="mb-1"><strong>Schreibweise:</strong> <span class="font-mono bg-white px-1 rounded shadow-sm">${t.simplified}</span></p>
+                        ` : ''}
+                        ${state.topic > 1 ? `
+                            <p><strong>Ergebnis:</strong> <span class="font-mono bg-white px-1 rounded shadow-sm">${t.result.toString().replace('.', ',')}</span></p>
+                        ` : ''}
+                    </div>
+                    <button onclick="initTask()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold ${btnS} rounded-lg shadow-md transition-all flex justify-center items-center gap-1 mt-2">
+                        ${icons.refresh} Nächste Aufgabe
+                    </button>
+                </div>`;
+            }
+
+            // HINTS
+            if (state.level <= 2 && t.hint && !t.isOpen && state.status !== 'success' && !state.showSolution) {
+                html += `<div class="mt-2 md:mt-4 w-full">`;
+                if (!state.showHint) {
+                    html += `
+                    <button onclick="setShowHint(true)" class="text-orange-500 hover:text-orange-600 flex items-center justify-center gap-1 mx-auto text-[10px] md:text-sm font-bold bg-orange-50 px-3 py-1 md:px-4 md:py-2 rounded-full border border-orange-200">
+                        ${icons.help} Tipp
+                    </button>`;
+                } else {
+                    html += `
+                    <div class="bg-orange-50 border border-orange-200 text-orange-800 p-2 md:p-3 rounded-lg text-[10px] md:text-sm max-w-xs md:max-w-md mx-auto flex items-start gap-1 md:gap-2 text-left">
+                        ${icons.alert} <span>${t.hint}</span>
+                    </div>`;
+                }
+                html += `</div>`;
+            }
+
+            if (state.level === 4 && !state.showHint && state.status !== 'success' && !state.showSolution) {
+                html += `
+                <button onclick="setShowHint(true)" class="mt-2 md:mt-4 text-gray-500 hover:text-gray-600 flex items-center justify-center gap-1 mx-auto text-[10px] md:text-sm font-bold bg-gray-100 px-3 py-1 md:px-4 md:py-2 rounded-full">
+                    ${icons.help} Regel
+                </button>`;
+            }
+            if (state.level === 4 && state.showHint && state.status !== 'success' && !state.showSolution) {
+                html += `
+                <div class="mt-2 md:mt-4 bg-gray-100 p-2 md:p-3 rounded-lg text-[10px] md:text-sm max-w-xs md:max-w-md mx-auto text-left text-gray-700">
+                    ${t.hint} <br/>
+                    ${state.topic === 2 ? "Tipp: 2. Zahl muss positiv sein." : ""}
+                    ${state.topic === 3 ? "Tipp: 2. Zahl muss negativ sein." : ""}
+                    ${state.topic === 4 ? "Alles erlaubt, hauptsache das Ergebnis stimmt!" : ""}
+                </div>`;
+            }
+
+            html += `</div></div>`; // End Actions Area & Wrapper
+
+            container.innerHTML = html;
+
+            // Attach input event listeners
+            if (document.getElementById('in-simp')) {
+                document.getElementById('in-simp').addEventListener('input', e => state.ansSimp = e.target.value);
+            }
+            if (document.getElementById('in-res')) {
+                document.getElementById('in-res').addEventListener('input', e => state.ansRes = e.target.value);
+            }
+            if (document.getElementById('in-open1')) {
+                document.getElementById('in-open1').addEventListener('input', e => state.openVal1 = e.target.value);
+            }
+            if (document.getElementById('in-open2')) {
+                document.getElementById('in-open2').addEventListener('input', e => state.openVal2 = e.target.value);
+            }
+            if (document.getElementById('in-openOp')) {
+                document.getElementById('in-openOp').addEventListener('change', e => state.openOp = e.target.value);
+            }
+
+            // Set Focus if idle (Kein Autofokus auf Mobile, um ständiges Pop-up der Tastatur zu vermeiden)
+            if (state.status === 'idle' && !state.isMobile) {
+                setTimeout(() => {
+                    let elToFocus;
+                    if (state.level === 4) {
+                        elToFocus = document.getElementById('in-open1');
+                    } else if (state.topic === 1 || actualRequireSimp) {
+                        elToFocus = document.getElementById('in-simp');
+                    } else {
+                        elToFocus = document.getElementById('in-res');
+                    }
+                    if (elToFocus) elToFocus.focus();
+                }, 50);
+            }
+        }
+
+        function renderAll() {
+            updateTabs();
+            updateLevelsAndToggle();
+            updateInfoBox();
+            updateWorkspace();
+        }
+
+        // --- ACTIONS ---
+        function setTopic(t) {
+            state.topic = t;
+            if (t === 1 && state.level === 4) state.level = 3;
+            initTask();
+        }
+
+        function setLevel(l) {
+            state.level = l;
+            initTask();
+        }
+
+        function setShowHint(show) {
+            state.showHint = show;
+            updateWorkspace();
+        }
+
+        document.getElementById('require-simp-btn').addEventListener('click', () => {
+            state.requireSimp = !state.requireSimp;
+            renderAll();
+        });
+
+        function initTask() {
+            state.task = generateTask(state.topic, state.level);
+            state.ansSimp = '';
+            state.ansRes = '';
+            state.openVal1 = '';
+            state.openVal2 = '';
+            state.openOp = '+';
+            state.status = 'idle';
+            state.failCount = 0;
+            state.showSolution = false;
+            state.simpStatus = '';
+            state.resStatus = '';
+            state.showHint = false;
+            renderAll();
+        }
+
+        function handleFail() {
+            state.failCount += 1;
+            if (state.failCount >= 3) state.showSolution = true;
+        }
+
+        function checkAnswer() {
+            if (state.status === 'success' || state.showSolution) return;
+
+            const isAlreadySimplified = state.topic === 4 && state.level === 3;
+            const actualRequireSimp = state.requireSimp && !isAlreadySimplified;
+
+            if (state.task.isOpen) {
+                const v1 = parseFloat(state.openVal1.replace(',', '.'));
+                const v2 = parseFloat(state.openVal2.replace(',', '.'));
+                if (isNaN(v1) || isNaN(v2)) {
+                    state.status = 'error';
+                    handleFail();
+                    updateWorkspace();
+                    return;
+                }
+                const res = state.openOp === '+' ? v1 + v2 : v1 - v2;
+                
+                let topicValid = true;
+                if (state.topic === 2 && v2 < 0) topicValid = false;
+                else if (state.topic === 3 && v2 >= 0) topicValid = false;
+
+                if (Math.abs(res - state.task.target) < 0.01 && topicValid) {
+                    state.status = 'success';
+                } else {
+                    state.status = 'error';
+                    handleFail();
+                }
+                updateWorkspace();
+                return;
+            }
+
+            let isCorrect = true;
+            let cSimpStatus = '';
+            let cResStatus = '';
+
+            if (state.topic === 1 || actualRequireSimp) {
+                const isSimpCorrect = simplifyStr(state.ansSimp) === simplifyStr(state.task.simplified);
+                cSimpStatus = isSimpCorrect ? 'correct' : 'error';
+                if (!isSimpCorrect) isCorrect = false;
+            }
+
+            if (state.topic > 1) {
+                const parsedRes = parseFloat(state.ansRes.replace(',', '.'));
+                const isResCorrect = !isNaN(parsedRes) && Math.abs(parsedRes - state.task.result) < 0.01;
+
+                if (isResCorrect) {
+                    cResStatus = 'correct';
+                } else {
+                    isCorrect = false;
+                    if ((state.topic === 1 || actualRequireSimp) && cSimpStatus === 'error') {
+                        const userSimpEval = evaluateSimpleMath(state.ansSimp);
+                        if (!isNaN(userSimpEval) && Math.abs(parsedRes - userSimpEval) < 0.01) {
+                            cResStatus = 'folgefehler';
+                        } else {
+                            cResStatus = 'error';
+                        }
+                    } else {
+                        cResStatus = 'error';
+                    }
+                }
+            }
+
+            state.simpStatus = cSimpStatus;
+            state.resStatus = cResStatus;
+
+            if (isCorrect) {
+                state.status = 'success';
+            } else {
+                state.status = 'error';
+                handleFail();
+            }
+            updateWorkspace();
+        }
+
+        // Global Keydown (Enter to submit/next)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (state.status === 'success' || state.showSolution) {
+                    e.preventDefault();
+                    initTask();
+                } else {
+                    e.preventDefault();
+                    checkAnswer();
+                }
+            } else if (e.key === ' ' && (state.status === 'success' || state.showSolution)) {
+                e.preventDefault();
+                initTask();
+            }
+        });
+
+        // Initialize App
+        initTask();
+
+    </script>
+</body>
+</html>
