@@ -720,14 +720,14 @@
                 html += `
                 <div class="flex items-center justify-center gap-1 md:gap-2">
                     <span class="${brS} font-bold">(</span>
-                    <input id="in-open1" type="text" inputmode="decimal" class="${val1Class}" placeholder="Zahl" value="${state.openVal1}" ${val1Disabled}>
+                    <input id="in-open1" type="text" autocorrect="off" autocomplete="off" class="${val1Class}" placeholder="Zahl" value="${state.openVal1}" ${val1Disabled}>
                     <span class="${brS} font-bold">)</span>
                     <select id="in-openOp" class="${opClass}" ${opDisabled}>
                         <option value="+" ${state.openOp === '+' ? 'selected' : ''}>+</option>
                         <option value="-" ${state.openOp === '-' ? 'selected' : ''}>-</option>
                     </select>
                     <span class="${brS} font-bold">(</span>
-                    <input id="in-open2" type="text" inputmode="decimal" class="${val2Class}" placeholder="Zahl" value="${state.openVal2}" ${val2Disabled}>
+                    <input id="in-open2" type="text" autocorrect="off" autocomplete="off" class="${val2Class}" placeholder="Zahl" value="${state.openVal2}" ${val2Disabled}>
                     <span class="${brS} font-bold">)</span>
                 </div>`;
             } else {
@@ -760,7 +760,7 @@
                         <label class="text-[10px] md:text-sm font-semibold text-gray-600 mb-0.5 flex items-center gap-1">
                             ${icons.chevronRight} ${actualRequireSimp ? "2. Ergebnis" : "Ergebnis"}
                         </label>
-                        <input id="in-res" type="text" inputmode="decimal" class="${rClass}" placeholder="=" value="${state.ansRes}" ${state.showSolution ? 'disabled' : ''}>
+                        <input id="in-res" type="text" autocorrect="off" autocomplete="off" class="${rClass}" placeholder="=" value="${state.ansRes}" ${state.showSolution ? 'disabled' : ''}>
                         ${state.resStatus === 'folgefehler' ? `
                             <span class="text-[10px] md:text-sm text-orange-600 font-bold mt-1 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200 text-center leading-tight">
                                 Folgefehler (Schreibweise falsch)
@@ -936,7 +936,7 @@
                     
                     <div class="flex items-center gap-3">
                         <span class="text-2xl font-bold text-gray-400">=</span>
-                        <input id="game-in-res" type="text" inputmode="decimal" class="${resClass}" placeholder="?" value="${state.ansRes}">
+                        <input id="game-in-res" type="text" autocorrect="off" autocomplete="off" class="${resClass}" placeholder="?" value="${state.ansRes}">
                     </div>
                     <button onclick="${m===1 ? 'checkGame1()' : 'checkGame4()'}" class="mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-8 rounded-lg shadow-md transition-all md:hidden">Prüfen</button>
                 </div>`;
@@ -969,7 +969,7 @@
                 if (state.game.expedition.missing === 'op') {
                     valHtml = `<div class="w-16 md:w-20 text-center text-lg md:text-xl p-2 md:p-3 font-bold text-slate-800">${state.ansRes}</div>`;
                 } else {
-                    valHtml = `<input id="game-in-val" type="text" inputmode="decimal" class="w-16 md:w-20 text-center text-lg md:text-xl p-2 md:p-3 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="?" value="${state.ansRes}" ${state.resStatus==='correct'?'disabled':''}>`;
+                    valHtml = `<input id="game-in-val" type="text" autocorrect="off" autocomplete="off" class="w-16 md:w-20 text-center text-lg md:text-xl p-2 md:p-3 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="?" value="${state.ansRes}" ${state.resStatus==='correct'?'disabled':''}>`;
                 }
 
                 html += `
@@ -1046,7 +1046,7 @@
                             else if (cell.status === 'folgefehler') bColor = "border-orange-500 bg-orange-50 text-orange-800 font-bold";
                             else if (cell.status === 'error') bColor = "border-red-500 bg-red-50 text-red-800 animate-shake font-bold";
                             
-                            html += `<input id="pyr-${r}-${c}" type="text" inputmode="decimal" class="w-14 h-10 md:w-20 md:h-12 text-center text-sm md:text-base border-2 rounded outline-none transition-all ${bColor}" value="${cell.val}" ${cell.status==='correct' ? 'disabled' : ''}>`;
+                            html += `<input id="pyr-${r}-${c}" type="text" autocorrect="off" autocomplete="off" class="w-14 h-10 md:w-20 md:h-12 text-center text-sm md:text-base border-2 rounded outline-none transition-all ${bColor}" value="${cell.val}" ${cell.status==='correct' ? 'disabled' : ''}>`;
                         }
                     }
                     html += `</div>`;
